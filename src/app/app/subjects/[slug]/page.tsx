@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getTopicsWithProgress } from "@/lib/stats";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { LinkButton } from "@/components/ui/button";
+import { AnimatedBar } from "@/components/motion/animated-bar";
 import { ChevronRight, Timer, CheckCircle2 } from "lucide-react";
 
 export default async function SubjectPage({
@@ -61,12 +62,11 @@ export default async function SubjectPage({
                 )}
               </div>
               <p className="mt-0.5 truncate text-sm text-(--color-ink-soft)">{t.summary}</p>
-              <div className="mt-2 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-black/10">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${t.progressPercent}%`, background: subject.color }}
-                />
-              </div>
+              <AnimatedBar
+                percent={t.progressPercent}
+                color={subject.color}
+                trackClassName="mt-2 h-1.5 w-full max-w-xs"
+              />
             </div>
             <div className="flex shrink-0 items-center gap-2 text-sm font-semibold text-(--color-ink-soft)">
               {t.solvedTasks}/{t.totalTasks}

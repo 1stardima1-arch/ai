@@ -11,7 +11,7 @@ export function SiteFooter() {
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Готово
+            Балл
           </div>
           <p className="mt-3 max-w-xs text-sm text-(--color-ink-soft)">
             Умная подготовка к ЕГЭ и ОГЭ: реальные задания, понятная теория и ИИ-репетитор,
@@ -39,7 +39,7 @@ export function SiteFooter() {
       </Container>
 
       <Container className="mt-10 flex flex-col gap-2 border-t border-black/5 pt-6 text-xs text-(--color-ink-soft) sm:flex-row sm:items-center sm:justify-between">
-        <span>© {new Date().getFullYear()} Готово. Все права защищены.</span>
+        <span>© {new Date().getFullYear()} Балл. Все права защищены.</span>
         <span>Задания составлены в формате открытого банка ФИПИ, в учебных целях.</span>
       </Container>
     </footer>

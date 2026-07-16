@@ -118,6 +118,61 @@ body {
   background-position: 60% 20%;
   opacity: 0.8;
   pointer-events: none;
+  animation: drift-a 16s ease-in-out infinite;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.blob-blue {
+  background: radial-gradient(circle, #c7d2fe, transparent 70%);
+  width: 40vw;
+  height: 40vw;
+  top: -10%;
+  left: -8%;
+  animation: drift-a 18s ease-in-out infinite;
+}
+
+.blob-pink {
+  background: radial-gradient(circle, #fbcfe8, transparent 70%);
+  width: 32vw;
+  height: 32vw;
+  bottom: -6%;
+  right: -6%;
+  animation: drift-b 14s ease-in-out infinite;
+}
+
+.blob-green {
+  background: radial-gradient(circle, #bbf7d0, transparent 70%);
+  width: 26vw;
+  height: 26vw;
+  top: 30%;
+  right: 10%;
+  animation: drift-a 20s ease-in-out infinite reverse;
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, 4%) scale(1.06); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-4%, -3%) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dreamy-hero-bg::before,
+  .blob-blue,
+  .blob-pink,
+  .blob-green {
+    animation: none;
+  }
 }
 
 .hill {

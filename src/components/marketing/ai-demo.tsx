@@ -42,7 +42,7 @@ export function AiDemo() {
                 <Sparkles className="h-4 w-4" />
               </span>
               <div>
-                <div className="text-sm font-bold">Тьютор Гото</div>
+                <div className="text-sm font-bold">Тьютор Макс</div>
                 <div className="text-xs text-(--color-brand-green)">● на связи</div>
               </div>
             </div>

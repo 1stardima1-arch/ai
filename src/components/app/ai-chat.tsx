@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, User, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export function AiChat({
           <Sparkles className="h-4 w-4" />
         </span>
         <div>
-          <div className="text-sm font-bold">Тьютор Гото</div>
+          <div className="text-sm font-bold">Тьютор Макс</div>
           <div className="text-xs text-(--color-brand-green)">● на связи</div>
         </div>
       </div>
@@ -115,34 +116,39 @@ export function AiChat({
           </div>
         )}
 
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex max-w-[90%] items-start gap-2",
-              m.role === "user" ? "ml-auto flex-row-reverse" : ""
-            )}
-          >
-            <span
+        <AnimatePresence initial={false}>
+          {messages.map((m, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
               className={cn(
-                "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-                m.role === "user" ? "bg-black/5" : "btn-gradient"
+                "flex max-w-[90%] items-start gap-2",
+                m.role === "user" ? "ml-auto flex-row-reverse" : ""
               )}
             >
-              {m.role === "user" ? <User className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-            </span>
-            <div
-              className={cn(
-                "whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                m.role === "user"
-                  ? "rounded-tr-sm bg-(--color-paper-dim)"
-                  : "rounded-tl-sm bg-(--color-sky-2)"
-              )}
-            >
-              {m.content || (isPending && i === messages.length - 1 ? "…" : "")}
-            </div>
-          </div>
-        ))}
+              <span
+                className={cn(
+                  "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+                  m.role === "user" ? "bg-black/5" : "btn-gradient"
+                )}
+              >
+                {m.role === "user" ? <User className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+              </span>
+              <div
+                className={cn(
+                  "whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                  m.role === "user"
+                    ? "rounded-tr-sm bg-(--color-paper-dim)"
+                    : "rounded-tl-sm bg-(--color-sky-2)"
+                )}
+              >
+                {m.content || (isPending && i === messages.length - 1 ? "…" : "")}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       <form

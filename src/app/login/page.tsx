@@ -34,6 +34,8 @@ export default async function LoginPage({
 
   return (
     <div className="dreamy-hero-bg relative flex min-h-screen items-center justify-center px-4 py-16">
+      <div className="blob blob-blue" />
+      <div className="blob blob-pink" />
       <div className="hill" />
       <div className="noise-overlay" />
 
@@ -45,7 +47,7 @@ export default async function LoginPage({
           <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
             <Sparkles className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          Готово
+          Балл
         </Link>
 
         <div className="card-surface p-8">

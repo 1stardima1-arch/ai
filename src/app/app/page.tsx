@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getDashboardOverview } from "@/lib/stats";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { LinkButton } from "@/components/ui/button";
+import { AnimatedBar } from "@/components/motion/animated-bar";
 import { ArrowRight, Target, TrendingUp, ListChecks } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -92,12 +93,7 @@ export default async function DashboardPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold">{s.name}</div>
-                  <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-black/10">
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${s.progressPercent}%`, background: s.color }}
-                    />
-                  </div>
+                  <AnimatedBar percent={s.progressPercent} color={s.color} trackClassName="mt-1 h-1.5" />
                 </div>
                 <span className="shrink-0 text-xs font-bold text-(--color-ink-soft)">{s.progressPercent}%</span>
               </Link>

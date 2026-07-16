@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getSubjectsWithProgress } from "@/lib/stats";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { Badge } from "@/components/ui/card";
+import { AnimatedBar } from "@/components/motion/animated-bar";
 
 const examLabel = { EGE: "ЕГЭ", OGE: "ОГЭ" } as const;
 
@@ -42,12 +43,7 @@ export default async function SubjectsPage() {
                 <span>{s.solvedTasks} из {s.totalTasks} решено</span>
                 <span>{s.progressPercent}%</span>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-black/10">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${s.progressPercent}%`, background: s.color }}
-                />
-              </div>
+              <AnimatedBar percent={s.progressPercent} color={s.color} trackClassName="mt-1.5" />
             </div>
           </Link>
         ))}

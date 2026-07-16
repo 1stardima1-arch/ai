@@ -17,7 +17,7 @@ export function SiteHeader() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
             <Sparkles className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          Готово
+          Балл
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">

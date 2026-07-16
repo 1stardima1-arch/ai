@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
+import { AnimatedBar } from "@/components/motion/animated-bar";
 import { Flame, Star, Lock } from "lucide-react";
 
 export default async function ProfilePage() {
@@ -51,9 +52,7 @@ export default async function ProfilePage() {
           <span>Уровень {level}</span>
           <span className="text-(--color-ink-soft)">{progress.current}/{progress.needed} XP до след. уровня</span>
         </div>
-        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-black/10">
-          <div className="h-full rounded-full btn-gradient" style={{ width: `${progress.percent}%` }} />
-        </div>
+        <AnimatedBar percent={progress.percent} className="btn-gradient" trackClassName="mt-2 h-2.5" />
       </div>
 
       <h2 className="mt-8 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">Достижения</h2>

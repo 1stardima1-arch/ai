@@ -6,6 +6,7 @@ import { NavLinks } from "@/components/app/nav-links";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
+import { AnimatedBar } from "@/components/motion/animated-bar";
 import { Sparkles, Flame } from "lucide-react";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Готово
+            Балл
           </Link>
 
           <div className="mt-8 flex-1">
@@ -45,12 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <span>Уровень {level}</span>
               <span>{progress.current}/{progress.needed} XP</span>
             </div>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-black/10">
-              <div
-                className="h-full rounded-full btn-gradient"
-                style={{ width: `${progress.percent}%` }}
-              />
-            </div>
+            <AnimatedBar percent={progress.percent} className="btn-gradient" trackClassName="mt-1.5" />
           </div>
         </aside>
 

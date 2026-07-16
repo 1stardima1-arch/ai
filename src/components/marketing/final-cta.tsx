@@ -9,6 +9,8 @@ export function FinalCta() {
       <Container>
         <Reveal>
           <div className="dreamy-hero-bg relative overflow-hidden rounded-[2.5rem] px-6 py-16 text-center sm:px-16 sm:py-24">
+            <div className="blob blob-blue" />
+            <div className="blob blob-pink" />
             <div className="hill" />
             <div className="relative">
               <h2 className="font-display mx-auto max-w-2xl text-3xl font-extrabold tracking-tight sm:text-5xl">

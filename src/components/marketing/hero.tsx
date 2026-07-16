@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/button";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 
 const avatars = [
   "linear-gradient(135deg,#fca5a5,#f472b6)",
@@ -19,6 +20,9 @@ const quickSubjects = [
 export function Hero() {
   return (
     <section className="dreamy-hero-bg relative rounded-b-[3rem] pb-28 pt-16 sm:pb-36">
+      <div className="blob blob-blue" />
+      <div className="blob blob-pink" />
+      <div className="blob blob-green" />
       <div className="hill" />
       <div className="noise-overlay" />
 
@@ -36,7 +40,9 @@ export function Hero() {
               />
             ))}
           </span>
-          <span className="gradient-text font-bold">Уже готовятся 12 000+ учеников</span>
+          <span className="gradient-text font-bold">
+            Уже готовятся <AnimatedNumber value={12000} />+ учеников
+          </span>
         </Link>
 
         <h1 className="font-display mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl">
