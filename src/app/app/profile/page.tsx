@@ -1,0 +1,79 @@
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { levelFromXp, xpProgress } from "@/lib/gamification";
+import { Flame, Star, Lock } from "lucide-react";
+
+export default async function ProfilePage() {
+  const session = await auth();
+  const userId = session!.user.id;
+
+  const [user, achievements, unlocked, totalAttempts] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: userId } }),
+    prisma.achievement.findMany(),
+    prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } }),
+    prisma.attempt.count({ where: { userId } }),
+  ]);
+
+  const unlockedIds = new Set(unlocked.map((u) => u.achievementId));
+  const level = levelFromXp(user.xp);
+  const progress = xpProgress(user.xp);
+
+  return (
+    <div>
+      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Профиль</h1>
+
+      <div className="mt-6 grid gap-5 sm:grid-cols-3">
+        <div className="card-surface p-6 text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-(--color-brand-amber)">
+            <Flame className="h-7 w-7" />
+          </span>
+          <div className="font-display mt-3 text-2xl font-extrabold">{user.streak}</div>
+          <div className="text-xs font-semibold text-(--color-ink-soft)">дней подряд</div>
+        </div>
+        <div className="card-surface p-6 text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-(--color-sky-2) text-(--color-brand-blue)">
+            <Star className="h-7 w-7" />
+          </span>
+          <div className="font-display mt-3 text-2xl font-extrabold">{level}</div>
+          <div className="text-xs font-semibold text-(--color-ink-soft)">уровень · {user.xp} XP</div>
+        </div>
+        <div className="card-surface p-6 text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-(--color-brand-green)">
+            <Flame className="h-7 w-7" />
+          </span>
+          <div className="font-display mt-3 text-2xl font-extrabold">{totalAttempts}</div>
+          <div className="text-xs font-semibold text-(--color-ink-soft)">заданий решено</div>
+        </div>
+      </div>
+
+      <div className="card-surface mt-5 p-6">
+        <div className="flex items-center justify-between text-sm font-semibold">
+          <span>Уровень {level}</span>
+          <span className="text-(--color-ink-soft)">{progress.current}/{progress.needed} XP до след. уровня</span>
+        </div>
+        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-black/10">
+          <div className="h-full rounded-full btn-gradient" style={{ width: `${progress.percent}%` }} />
+        </div>
+      </div>
+
+      <h2 className="mt-8 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">Достижения</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {achievements.map((a) => {
+          const isUnlocked = unlockedIds.has(a.id);
+          return (
+            <div
+              key={a.id}
+              className={`card-surface flex flex-col items-center gap-2 p-5 text-center ${
+                isUnlocked ? "" : "opacity-50"
+              }`}
+            >
+              <div className="text-3xl">{isUnlocked ? a.icon : <Lock className="h-7 w-7 text-black/30" />}</div>
+              <div className="text-sm font-bold">{a.title}</div>
+              <div className="text-xs text-(--color-ink-soft)">{a.description}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
