@@ -48,7 +48,14 @@ jobs:
       - name: Decode signing keystore
         run: |
           mkdir -p android-twa
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android-twa/android-keystore
+          # --ignore-garbage (-i) skips stray whitespace/newlines that copy-pasting a
+          # secret's value into the GitHub UI can introduce, instead of hard-failing.
+          printf '%s' "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d -i > android-twa/android-keystore
+          if [ ! -s android-twa/android-keystore ]; then
+            echo "::error::Decoded keystore is empty. Check the ANDROID_KEYSTORE_BASE64 secret value."
+            exit 1
+          fi
+          echo "Decoded keystore: $(wc -c < android-twa/android-keystore) bytes"
 
       - name: Generate TWA Android project
         env:
