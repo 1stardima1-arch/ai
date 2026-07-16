@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
+import Yandex from "next-auth/providers/yandex";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +14,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
+if (process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET) {
+  providers.push(
+    Yandex({
+      clientId: process.env.YANDEX_CLIENT_ID,
+      clientSecret: process.env.YANDEX_CLIENT_SECRET,
     })
   );
 }

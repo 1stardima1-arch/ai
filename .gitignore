@@ -37,6 +37,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Android TWA build output (generated locally / in CI, never committed — contains the
+# signing keystore if built locally)
+/android-twa/
+/.bubblewrap-tools/
+*.keystore
+*.jks
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

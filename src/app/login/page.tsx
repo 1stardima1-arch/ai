@@ -5,6 +5,7 @@ import { LoginActions } from "@/components/app/login-actions";
 
 const providers = {
   google: !!process.env.GOOGLE_CLIENT_ID,
+  yandex: !!process.env.YANDEX_CLIENT_ID,
   vk: !!process.env.VK_CLIENT_ID,
   demo: process.env.ENABLE_DEMO_LOGIN === "true",
 };
@@ -20,6 +21,11 @@ export default async function LoginPage({
   async function googleSignIn() {
     "use server";
     await signIn("google", { redirectTo });
+  }
+
+  async function yandexSignIn() {
+    "use server";
+    await signIn("yandex", { redirectTo });
   }
 
   async function vkSignIn() {
@@ -61,9 +67,11 @@ export default async function LoginPage({
 
           <LoginActions
             hasGoogle={providers.google}
+            hasYandex={providers.yandex}
             hasVk={providers.vk}
             hasDemo={providers.demo}
             googleAction={googleSignIn}
+            yandexAction={yandexSignIn}
             vkAction={vkSignIn}
             demoAction={demoSignIn}
           />

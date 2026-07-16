@@ -15,18 +15,34 @@ function GoogleG({ className }: { className?: string }) {
   );
 }
 
+function YandexLogo({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="24" cy="24" r="24" fill="#FC3F1D" />
+      <path
+        d="M26.6 12.5h-2.9c-4.6 0-7.9 2.9-7.9 7.6 0 3.4 1.6 5.3 4.1 6.8L15.4 35h3.7l4.5-8.1v8.1h3.2V12.5h-.2zm-.2 11.5h-1.8c-2.6 0-4.5-1.4-4.5-4.1 0-2.6 1.7-4 4.5-4h1.8v8.1z"
+        fill="#fff"
+      />
+    </svg>
+  );
+}
+
 export function LoginActions({
   hasGoogle,
+  hasYandex,
   hasVk,
   hasDemo,
   googleAction,
+  yandexAction,
   vkAction,
   demoAction,
 }: {
   hasGoogle: boolean;
+  hasYandex: boolean;
   hasVk: boolean;
   hasDemo: boolean;
   googleAction: () => Promise<void>;
+  yandexAction: () => Promise<void>;
   vkAction: () => Promise<void>;
   demoAction: (formData: FormData) => Promise<void>;
 }) {
@@ -50,6 +66,23 @@ export function LoginActions({
         ) : (
           <div className="rounded-full border border-dashed border-black/15 px-5 py-3.5 text-center text-sm text-(--color-ink-soft)">
             Вход через Google не настроен
+          </div>
+        )}
+
+        {hasYandex ? (
+          <form action={yandexAction}>
+            <button
+              type="submit"
+              disabled={!consent}
+              className="flex w-full items-center justify-center gap-2.5 rounded-full border border-black/10 bg-white px-5 py-3.5 text-sm font-semibold shadow-(--shadow-soft) transition-colors hover:border-black/20 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <YandexLogo className="h-4.5 w-4.5" />
+              Продолжить с Яндекс ID
+            </button>
+          </form>
+        ) : (
+          <div className="rounded-full border border-dashed border-black/15 px-5 py-3.5 text-center text-sm text-(--color-ink-soft)">
+            Вход через Яндекс не настроен
           </div>
         )}
 
