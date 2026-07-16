@@ -48,14 +48,12 @@ export function Hero() {
         <h1 className="font-display mt-7 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl">
           Готовься к ЕГЭ и ОГЭ
           <br />
-          вместе с ИИ, который
-          <br />
-          объясняет как <span className="gradient-text">друг</span>
+          <span className="gradient-text">без репетиторов</span>
         </h1>
 
         <p className="mt-6 max-w-xl text-balance text-base text-(--color-ink-soft) sm:text-lg">
-          Реальные задания в формате открытого банка ФИПИ, понятная теория без «воды»
-          и умный ИИ-репетитор, который разбирает каждую твою ошибку. Бесплатно.
+          Простая теория, реальные задания из открытого банка ФИПИ и ИИ, который понятно
+          объясняет и разбирает каждую твою ошибку. Бесплатно.
         </p>
 
         <div className="mt-10 w-full max-w-2xl rounded-[2rem] border border-black/5 bg-white/90 p-3 shadow-(--shadow-lift) backdrop-blur">

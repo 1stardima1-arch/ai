@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { isAiEnabled, streamTutorReply, type ChatMessage } from "@/lib/gemini";
+import { isAiEnabled, streamTutorReply, type ChatMessage } from "@/lib/ai";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   });
 
   const history: ChatMessage[] = recent.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
+    role: m.role === "assistant" ? "assistant" : "user",
     content: m.content,
   }));
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   if (!isAiEnabled()) {
     const fallback =
-      "ИИ-репетитор пока не настроен: добавь бесплатный ключ GEMINI_API_KEY в .env (см. README.md — это займёт 2 минуты на aistudio.google.com/apikey).";
+      "ИИ-репетитор пока не настроен: добавь бесплатный ключ GROQ_API_KEY в .env (см. README.md — это займёт 2 минуты на console.groq.com/keys).";
     await prisma.aiMessage.create({
       data: { userId, role: "assistant", content: fallback, taskId },
     });
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         const msg = "Не получилось получить ответ от ИИ. Попробуй ещё раз через минуту.";
         controller.enqueue(encoder.encode(msg));
         full = msg;
-        console.error("Gemini stream error", err);
+        console.error("Groq stream error", err);
       } finally {
         await prisma.aiMessage.create({
           data: { userId, role: "assistant", content: full, taskId },

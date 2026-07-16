@@ -5,7 +5,7 @@
 пробные экзамены и геймификация (стрики, XP, достижения).
 
 **Стек:** Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Prisma + PostgreSQL ·
-Auth.js v5 (Google + VK) · Google Gemini (бесплатный ИИ) · Recharts · Framer Motion.
+Auth.js v5 (Google + VK) · Groq (бесплатный быстрый ИИ) · Recharts · Framer Motion.
 
 ---
 
@@ -36,7 +36,7 @@ GOOGLE_CLIENT_SECRET=""
 VK_CLIENT_ID=""
 VK_CLIENT_SECRET=""
 
-GEMINI_API_KEY=""
+GROQ_API_KEY=""
 
 ENABLE_DEMO_LOGIN="true"
 ```
@@ -57,7 +57,7 @@ npm run dev
 Открой [http://localhost:3000](http://localhost:3000). Пока не настроены Google/VK,
 можно войти через **демо-вход** (просто имя, без пароля) — так работает весь функционал:
 прогресс, аналитика, разбор ошибок, пробные экзамены. ИИ-репетитор ответит настоящим ИИ,
-как только добавишь `GEMINI_API_KEY` (см. ниже — это бесплатно и займёт 2 минуты).
+как только добавишь `GROQ_API_KEY` (см. ниже — это бесплатно и займёт 2 минуты).
 
 Перед продакшн-деплоем поставь `ENABLE_DEMO_LOGIN="false"`, чтобы отключить демо-вход.
 
@@ -74,19 +74,23 @@ npm run dev
 
 ---
 
-## 3. ИИ-репетитор — Google Gemini (бесплатно)
+## 3. ИИ-репетитор — Groq (бесплатно и очень быстро)
 
-1. Зайди на **[aistudio.google.com/apikey](https://aistudio.google.com/apikey)** и войди с Google-аккаунтом.
-2. Нажми **Create API key** (можно в новом проекте).
+Groq — облачный сервис инференса, который отвечает почти мгновенно (специализированные
+чипы LPU) и даёт щедрый бесплатный тариф без привязки карты.
+
+1. Зайди на **[console.groq.com/keys](https://console.groq.com/keys)** и зарегистрируйся (можно через Google).
+2. Нажми **Create API Key**.
 3. Скопируй ключ и вставь в `.env`:
    ```
-   GEMINI_API_KEY="твой_ключ"
+   GROQ_API_KEY="твой_ключ"
    ```
 4. Перезапусти `npm run dev`.
 
-Бесплатный тариф Gemini имеет лимиты по запросам в минуту — для одного пользователя
-и учебных целей этого достаточно с запасом. Модель задаётся через `GEMINI_MODEL`
-(по умолчанию `gemini-2.5-flash` — быстрая и достаточно умная для объяснений).
+Модель задаётся через `GROQ_MODEL` (по умолчанию `llama-3.3-70b-versatile` — быстрая
+и достаточно умная для объяснений). Список доступных моделей — на
+[console.groq.com/docs/models](https://console.groq.com/docs/models), можно заменить
+на любую другую, просто изменив `GROQ_MODEL`.
 
 Без ключа приложение продолжает работать: ИИ-репетитор просто отвечает вежливым
 сообщением о том, что ключ не настроен — весь остальной функционал (задания, прогресс,
@@ -175,7 +179,7 @@ prisma/seed.ts              — загрузчик seed-данных в БД
 
 src/auth.ts                 — конфигурация Auth.js (Google, VK, демо-вход)
 src/lib/vk-provider.ts      — кастомный провайдер VK ID для Auth.js
-src/lib/gemini.ts           — обёртка над Google Gemini (ИИ-репетитор)
+src/lib/ai.ts                — обёртка над Groq (ИИ-репетитор)
 src/lib/grading.ts          — проверка ответов
 src/lib/gamification.ts     — XP, уровни, стрики
 src/lib/stats.ts            — запросы для дашборда и аналитики

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import "./globals.css";
 
@@ -14,9 +14,26 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Балл — подготовка к ЕГЭ и ОГЭ с ИИ",
+  title: "Балл — готовься к ЕГЭ и ОГЭ без репетиторов",
   description:
-    "Балл — умная подготовка к ЕГЭ и ОГЭ: реальные задания, понятная теория и ИИ-репетитор, который объясняет как друг. Прогресс, разбор ошибок и аналитика в одном месте.",
+    "Балл — подготовка к ЕГЭ и ОГЭ без репетиторов: простая теория, реальные задания из открытого банка ФИПИ и ИИ, который понятно объясняет. Прогресс, разбор ошибок и аналитика в одном месте.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Балл",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4f6bff",
 };
 
 export default function RootLayout({

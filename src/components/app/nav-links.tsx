@@ -9,6 +9,7 @@ import {
   Target,
   LineChart,
   Sparkles,
+  Trophy,
   User,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ const links = [
   { href: "/app/subjects", label: "Предметы", icon: BookOpen },
   { href: "/app/mistakes", label: "Разбор ошибок", icon: Target },
   { href: "/app/analytics", label: "Аналитика", icon: LineChart },
+  { href: "/app/leaderboard", label: "Рейтинг", icon: Trophy },
   { href: "/app/ai", label: "ИИ-репетитор", icon: Sparkles },
   { href: "/app/profile", label: "Профиль", icon: User },
 ];

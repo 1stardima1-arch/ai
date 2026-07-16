@@ -1,0 +1,31 @@
+{
+  "name": "Балл — подготовка к ЕГЭ и ОГЭ",
+  "short_name": "Балл",
+  "description": "Готовься к ЕГЭ и ОГЭ без репетиторов: теория, реальные задания и ИИ-репетитор.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#4f6bff",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

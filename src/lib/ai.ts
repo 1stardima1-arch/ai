@@ -1,21 +1,21 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
-let client: GoogleGenAI | null = null;
+let client: Groq | null = null;
 
 export function isAiEnabled() {
-  return !!process.env.GEMINI_API_KEY;
+  return !!process.env.GROQ_API_KEY;
 }
 
 function getClient() {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     throw new Error(
-      "GEMINI_API_KEY не задан. Получи бесплатный ключ на https://aistudio.google.com/apikey и добавь его в .env"
+      "GROQ_API_KEY не задан. Получи бесплатный ключ на https://console.groq.com/keys и добавь его в .env"
     );
   }
   if (!client) {
-    client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    client = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
   return client;
 }
@@ -23,7 +23,7 @@ function getClient() {
 export const TUTOR_SYSTEM_PROMPT = `Ты — «Тьютор Макс», ИИ-репетитор в приложении для подготовки к ЕГЭ и ОГЭ.
 
 Твой стиль:
-- Ты объясняешь как близкий друг, который отлично разбирается в предмете: тепло, без снобизма, никогда не стыдишь за ошибки.
+- Объясняешь тепло и по-человечески, как хороший преподаватель: без снобизма, никогда не стыдишь за ошибки.
 - Пиши по-русски, просто и живо, короткими абзацами. Можно использовать уместные эмодзи, но не перегружай ими текст.
 - Объясняй "почему", а не только "как" — ученик должен понять логику, а не запомнить готовый ответ.
 - Если ученик прислал конкретное задание и свой ответ — сначала аккуратно укажи, в чём именно ошибка (или похвали, если верно), затем объясни нужное правило/метод, и в конце предложи следующий шаг или похожую мини-задачу.
@@ -31,47 +31,48 @@ export const TUTOR_SYSTEM_PROMPT = `Ты — «Тьютор Макс», ИИ-р�
 - Держи ответы по существу: 3-6 абзацев максимум, если не попросили подробнее.
 - Ты знаешь материал ЕГЭ и ОГЭ по всем предметам школьной программы.`;
 
-export type ChatMessage = { role: "user" | "model"; content: string };
+export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export async function* streamTutorReply(
   history: ChatMessage[],
   context?: string
 ) {
-  const ai = getClient();
+  const groq = getClient();
 
-  const contents = history.map((m) => ({
-    role: m.role,
-    parts: [{ text: m.content }],
-  }));
-
-  const stream = await ai.models.generateContentStream({
-    model: MODEL,
-    contents,
-    config: {
-      systemInstruction: context
+  const messages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: context
         ? `${TUTOR_SYSTEM_PROMPT}\n\nКонтекст текущего задания ученика:\n${context}`
         : TUTOR_SYSTEM_PROMPT,
-      temperature: 0.7,
     },
+    ...history,
+  ];
+
+  const stream = await groq.chat.completions.create({
+    model: MODEL,
+    messages,
+    temperature: 0.7,
+    stream: true,
   });
 
   for await (const chunk of stream) {
-    const text = chunk.text;
+    const text = chunk.choices[0]?.delta?.content;
     if (text) yield text;
   }
 }
 
 export async function generateText(prompt: string, systemInstruction?: string) {
-  const ai = getClient();
-  const res = await ai.models.generateContent({
+  const groq = getClient();
+  const res = await groq.chat.completions.create({
     model: MODEL,
-    contents: [{ role: "user", parts: [{ text: prompt }] }],
-    config: {
-      systemInstruction: systemInstruction ?? TUTOR_SYSTEM_PROMPT,
-      temperature: 0.5,
-    },
+    messages: [
+      { role: "system", content: systemInstruction ?? TUTOR_SYSTEM_PROMPT },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.5,
   });
-  return res.text ?? "";
+  return res.choices[0]?.message?.content ?? "";
 }
 
 export async function explainMistake({
