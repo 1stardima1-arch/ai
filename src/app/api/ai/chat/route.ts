@@ -1,7 +1,24 @@
 import { NextRequest } from "next/server";
+import { APIError } from "groq-sdk";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isAiEnabled, streamTutorReply, type ChatMessage } from "@/lib/ai";
+
+function describeGroqError(err: unknown): string {
+  if (err instanceof APIError) {
+    if (err.status === 401) {
+      return "Ключ GROQ_API_KEY недействителен (ошибка 401 от Groq). Проверь, что ключ скопирован полностью, без пробелов и кавычек, и что после его добавления в Vercel сделан redeploy.";
+    }
+    if (err.status === 404) {
+      return `Groq не нашёл модель "${process.env.GROQ_MODEL || "llama-3.3-70b-versatile"}" (ошибка 404). Возможно, модель переименована/снята с поддержки — проверь актуальный список на console.groq.com/docs/models и обнови GROQ_MODEL.`;
+    }
+    if (err.status === 429) {
+      return "Groq вернул ошибку 429 — превышен лимит запросов (бесплатный тариф). Подожди немного и попробуй снова.";
+    }
+    return `Groq вернул ошибку ${err.status ?? ""}: ${err.message}`;
+  }
+  return "Не получилось получить ответ от ИИ. Попробуй ещё раз через минуту.";
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -62,7 +79,7 @@ export async function POST(req: NextRequest) {
           controller.enqueue(encoder.encode(chunk));
         }
       } catch (err) {
-        const msg = "Не получилось получить ответ от ИИ. Попробуй ещё раз через минуту.";
+        const msg = describeGroqError(err);
         controller.enqueue(encoder.encode(msg));
         full = msg;
         console.error("Groq stream error", err);
