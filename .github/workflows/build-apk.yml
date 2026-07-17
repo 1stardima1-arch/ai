@@ -45,17 +45,34 @@ jobs:
       - name: Install Bubblewrap tooling (isolated from the app's own dependencies)
         run: npm install --no-save --prefix ./.bubblewrap-tools @bubblewrap/cli@1.24.1
 
-      - name: Decode signing keystore
+      - name: Decode signing keystore (falls back to a temporary key if the secret is bad)
+        id: keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           mkdir -p android-twa
-          # --ignore-garbage (-i) skips stray whitespace/newlines that copy-pasting a
-          # secret's value into the GitHub UI can introduce, instead of hard-failing.
-          printf '%s' "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d -i > android-twa/android-keystore
-          if [ ! -s android-twa/android-keystore ]; then
-            echo "::error::Decoded keystore is empty. Check the ANDROID_KEYSTORE_BASE64 secret value."
-            exit 1
+          ALIAS="${KEY_ALIAS:-ball}"
+          echo "alias=$ALIAS" >> "$GITHUB_OUTPUT"
+
+          echo "Secret length as received: ${#KEYSTORE_B64} chars (expected 3612)"
+          CLEAN=$(printf '%s' "$KEYSTORE_B64" | tr -d ' \t\r\n')
+          echo "Secret length after stripping whitespace: ${#CLEAN} chars"
+          printf '%s' "$CLEAN" | base64 -d -i > android-twa/android-keystore 2>/dev/null || true
+
+          if [ -s android-twa/android-keystore ] && keytool -list -keystore android-twa/android-keystore -storepass "$KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+            echo "Using the persistent keystore from ANDROID_KEYSTORE_BASE64."
+            echo "usingFallback=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 didn't decode to a valid keystore (or the password doesn't match it). Generating a TEMPORARY signing key so this build can still succeed — fix the secret and re-run before submitting to RuStore, since a future build with the real key won't be able to update an app installed from this one (Android requires the same signature to update in place)."
+            rm -f android-twa/android-keystore
+            keytool -genkeypair -v -keystore android-twa/android-keystore -alias "$ALIAS" \
+              -keyalg RSA -keysize 2048 -validity 10950 \
+              -storepass "temporary123456" -keypass "temporary123456" \
+              -dname "CN=Ball App (temporary), OU=Ball, O=Ball, L=Moscow, ST=Moscow, C=RU"
+            echo "usingFallback=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "Decoded keystore: $(wc -c < android-twa/android-keystore) bytes"
 
       - name: Generate TWA Android project
         env:
@@ -63,7 +80,7 @@ jobs:
           WEB_MANIFEST_URL: ${{ inputs.webManifestUrl }}
           TWA_PACKAGE_ID: ru.ball.app
           TWA_DIR: android-twa
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_ALIAS: ${{ steps.keystore.outputs.alias }}
           APP_VERSION_CODE: ${{ inputs.versionCode }}
           APP_VERSION_NAME: ${{ inputs.versionName }}
         run: node scripts/twa/generate.js
@@ -78,9 +95,19 @@ jobs:
       - name: Build & sign the APK
         working-directory: android-twa
         env:
-          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ steps.keystore.outputs.usingFallback == 'true' && 'temporary123456' || secrets.ANDROID_KEYSTORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ steps.keystore.outputs.usingFallback == 'true' && 'temporary123456' || secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: node ${{ github.workspace }}/.bubblewrap-tools/node_modules/.bin/bubblewrap build --manifest=./twa-manifest.json
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.keystore.outputs.usingFallback }}" = "true" ]; then
+            echo "### ⚠️ Собрано с ВРЕМЕННЫМ ключом подписи" >> "$GITHUB_STEP_SUMMARY"
+            echo "ANDROID_KEYSTORE_BASE64 не расшифровался в валидный keystore. Этот APK можно поставить и попробовать, но он подписан не тем ключом, что предназначен для RuStore. Почини секрет (см. android-keystore-secrets.txt) и запусти workflow заново перед публикацией." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ✅ Собрано постоянным ключом подписи" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload APK (install this on your phone)
         uses: actions/upload-artifact@v4
