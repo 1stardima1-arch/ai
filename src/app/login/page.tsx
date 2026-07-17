@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signIn } from "@/auth";
 import { Sparkles } from "lucide-react";
 import { LoginActions } from "@/components/app/login-actions";
+import { PageTransition } from "@/components/motion/page-transition";
 
 const providers = {
   google: !!process.env.GOOGLE_CLIENT_ID,
@@ -46,6 +47,7 @@ export default async function LoginPage({
       <div className="hill" />
       <div className="noise-overlay" />
 
+      <PageTransition>
       <div className="relative w-full max-w-md">
         <Link
           href="/"
@@ -77,6 +79,7 @@ export default async function LoginPage({
           />
         </div>
       </div>
+      </PageTransition>
     </div>
   );
 }

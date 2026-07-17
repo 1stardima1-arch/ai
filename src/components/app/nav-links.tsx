@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -36,14 +37,21 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={l.href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors",
+              "press-spring relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors duration-300",
               active
-                ? "bg-(--color-ink) text-white"
+                ? "text-white"
                 : "text-(--color-ink-soft) hover:bg-black/5 hover:text-(--color-ink)"
             )}
           >
-            <l.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
-            {l.label}
+            {active && (
+              <motion.span
+                layoutId="sidebar-active-pill"
+                className="absolute inset-0 rounded-2xl bg-(--color-ink)"
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+              />
+            )}
+            <l.icon className="relative z-10 h-4.5 w-4.5" strokeWidth={2.2} />
+            <span className="relative z-10">{l.label}</span>
           </Link>
         );
       })}

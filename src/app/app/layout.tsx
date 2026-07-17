@@ -24,8 +24,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-(--color-paper)">
+      <div className="app-ambient" aria-hidden>
+        <div className="blob blob-blue" />
+        <div className="blob blob-pink" />
+        <div className="blob blob-green" />
+      </div>
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
-        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] border border-black/5 bg-white p-5 shadow-(--shadow-soft) lg:flex">
+        <aside className="liquid-glass glass-sheen sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] p-5 lg:flex">
           <Link href="/" className="flex items-center gap-2 px-1 font-display text-lg font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -52,11 +57,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
         <div className="min-w-0 flex-1 pb-20 lg:pb-0">
           <div className="mb-6 flex items-center justify-end gap-3">
-            <div className="flex items-center gap-2 rounded-full border border-black/5 bg-white px-3 py-1.5 text-sm font-bold shadow-(--shadow-soft) lg:hidden">
+            <div className="liquid-glass flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold lg:hidden">
               <Flame className="h-4 w-4 text-(--color-brand-amber)" />
               {user.streak}
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-black/5 bg-white py-1.5 pl-1.5 pr-3 shadow-(--shadow-soft)">
+            <div className="liquid-glass flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3">
               <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-(--color-paper-dim) text-xs font-bold">
                 {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element

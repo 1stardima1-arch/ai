@@ -93,10 +93,17 @@ body {
 }
 
 .card-surface {
-  background: var(--color-surface);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  border: 1px solid rgba(11, 11, 18, 0.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  transition: transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1), box-shadow 0.45s ease;
+}
+.card-surface:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--shadow-lift);
 }
 
 .dreamy-hero-bg {
@@ -191,6 +198,127 @@ body {
   opacity: 0.035;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- iOS-style Liquid Glass ---------- */
+
+@property --siri-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.liquid-glass {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42));
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.7);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+    0 2px 8px rgba(11, 11, 18, 0.05),
+    0 16px 40px rgba(11, 11, 18, 0.09);
+}
+
+/* passing specular reflection — the "mirror" sheen of liquid glass */
+.glass-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.5) 45%,
+    rgba(255, 255, 255, 0.12) 52%,
+    transparent 62%
+  );
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  animation: glass-sheen-pass 7s cubic-bezier(0.22, 1, 0.36, 1) infinite 1.2s;
+}
+
+@keyframes glass-sheen-pass {
+  0% { background-position: 130% 0; }
+  22% { background-position: -30% 0; }
+  100% { background-position: -30% 0; }
+}
+
+/* spring-like press feedback, iOS style */
+.press-spring {
+  transition: transform 0.35s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+.press-spring:active {
+  transform: scale(0.96);
+}
+
+/* ---------- Siri / Apple Intelligence edge glow ---------- */
+
+.siri-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+
+.siri-glow::before,
+.siri-glow::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 26px;
+  padding: 4px;
+  background: conic-gradient(
+    from var(--siri-angle),
+    #ff8a5c,
+    #ff5f9e,
+    #b06bff,
+    #5a8dff,
+    #64d8ff,
+    #7dffb2,
+    #ff8a5c
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: siri-rotate 1.6s linear infinite;
+}
+
+/* wide blurred copy underneath = the AI aura bleeding inward */
+.siri-glow::after {
+  padding: 18px;
+  filter: blur(22px);
+  opacity: 0.85;
+}
+
+@keyframes siri-rotate {
+  to { --siri-angle: 360deg; }
+}
+
+/* ambient color field behind the app so glass panels have something to refract */
+.app-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  overflow: hidden;
+}
+.app-ambient .blob {
+  opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .siri-glow { display: none; }
+  .glass-sheen::after { animation: none; }
+  .press-spring { transition: none; }
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
