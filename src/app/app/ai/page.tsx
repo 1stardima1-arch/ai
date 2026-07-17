@@ -14,13 +14,17 @@ export default async function AiTutorPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">ИИ-репетитор</h1>
+      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
+        <span className="gradient-text">ИИ-репетитор</span>
+      </h1>
       <p className="mt-1 text-(--color-ink-soft)">
         Спрашивай про любую тему из школьной программы — объясню по-дружески, без занудства.
       </p>
 
       <div className="mt-6">
         <AiChat
+          variant="siri"
+          placeholder="Спроси Макса о чём угодно…"
           initialMessages={history.map((m) => ({
             role: m.role === "assistant" ? "assistant" : "user",
             content: m.content,

@@ -47,7 +47,7 @@ export default async function LoginPage({
       <div className="hill" />
       <div className="noise-overlay" />
 
-      <PageTransition>
+      <PageTransition glow="never">
       <div className="relative w-full max-w-md">
         <Link
           href="/"

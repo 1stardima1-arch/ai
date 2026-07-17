@@ -1,0 +1,91 @@
+import { prisma } from "@/lib/prisma";
+
+// "Задания дня": a small set that deterministically rotates every day, so
+// students see fresh tasks daily without any cron — the pick is a pure
+// function of (date, task bank). Everyone gets the same daily set, which
+// keeps the leaderboard fair.
+
+// Day key in Moscow time (UTC+3, no DST) — the audience is RU students.
+export function moscowDayKey(now = new Date()): number {
+  const msk = new Date(now.getTime() + 3 * 3600_000);
+  return msk.getUTCFullYear() * 10_000 + (msk.getUTCMonth() + 1) * 100 + msk.getUTCDate();
+}
+
+// mulberry32 — tiny deterministic PRNG, good enough for shuffling.
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export async function getDailyTasks(userId: string, count = 3) {
+  const dayKey = moscowDayKey();
+
+  // Auto-graded tasks only: the daily set should be quickly solvable solo.
+  const tasks = await prisma.task.findMany({
+    where: { type: { in: ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE", "MATCHING"] } },
+    select: {
+      id: true,
+      number: true,
+      difficulty: true,
+      subject: { select: { id: true, name: true, slug: true, color: true, icon: true } },
+      topic: { select: { name: true } },
+    },
+    orderBy: { id: "asc" }, // stable base order → deterministic shuffle
+  });
+  if (tasks.length === 0) return { dayKey, tasks: [] };
+
+  // Seeded shuffle of the whole bank, then take the first task of each
+  // subject in shuffle order (spreads the set across subjects), topping up
+  // with remaining tasks if there are fewer subjects than `count`.
+  const rand = mulberry32(dayKey * 2654435761);
+  const shuffled = [...tasks];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const seenSubjects = new Set<string>();
+  const picked: typeof shuffled = [];
+  for (const t of shuffled) {
+    if (picked.length >= count) break;
+    if (!seenSubjects.has(t.subject.id)) {
+      seenSubjects.add(t.subject.id);
+      picked.push(t);
+    }
+  }
+  for (const t of shuffled) {
+    if (picked.length >= count) break;
+    if (!picked.includes(t)) picked.push(t);
+  }
+
+  // Which of today's tasks the student already solved today (any attempt today counts).
+  const startOfDayMsk = new Date();
+  const msk = new Date(startOfDayMsk.getTime() + 3 * 3600_000);
+  msk.setUTCHours(0, 0, 0, 0);
+  const dayStart = new Date(msk.getTime() - 3 * 3600_000);
+
+  const attempts = await prisma.attempt.findMany({
+    where: {
+      userId,
+      taskId: { in: picked.map((t) => t.id) },
+      createdAt: { gte: dayStart },
+    },
+    select: { taskId: true, isCorrect: true },
+  });
+  const attemptedIds = new Map(attempts.map((a) => [a.taskId, a.isCorrect]));
+
+  return {
+    dayKey,
+    tasks: picked.map((t) => ({
+      ...t,
+      attempted: attemptedIds.has(t.id),
+      solvedCorrect: attemptedIds.get(t.id) === true,
+    })),
+  };
+}

@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
+import { ProfileEditor } from "@/components/app/profile-editor";
+import { NAME_CHANGE_COOLDOWN_DAYS } from "@/lib/avatars";
 import { Flame, Star, Lock } from "lucide-react";
 
 export default async function ProfilePage() {
@@ -19,11 +21,33 @@ export default async function ProfilePage() {
   const level = levelFromXp(user.xp);
   const progress = xpProgress(user.xp);
 
+  // Server component: reading the real clock here is intentional — the lock
+  // countdown must reflect "now" at request time.
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
+  const nameLockedDaysLeft = user.nameChangedAt
+    ? Math.max(
+        0,
+        Math.ceil(
+          NAME_CHANGE_COOLDOWN_DAYS - (now - user.nameChangedAt.getTime()) / 86_400_000
+        )
+      )
+    : 0;
+
   return (
     <div>
       <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Профиль</h1>
 
-      <div className="mt-6 grid gap-5 sm:grid-cols-3">
+      <div className="mt-6">
+        <ProfileEditor
+          initialName={user.name ?? ""}
+          initialAvatarKey={user.avatarKey}
+          image={user.image}
+          nameLockedDaysLeft={nameLockedDaysLeft}
+        />
+      </div>
+
+      <div className="mt-5 grid gap-5 sm:grid-cols-3">
         <div className="card-surface p-6 text-center">
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-(--color-brand-amber)">
             <Flame className="h-7 w-7" />

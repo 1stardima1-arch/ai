@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { levelFromXp } from "@/lib/gamification";
+import { UserAvatar } from "@/components/app/user-avatar";
 import { Trophy, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +14,7 @@ export default async function LeaderboardPage() {
   const top = await prisma.user.findMany({
     orderBy: { xp: "desc" },
     take: 50,
-    select: { id: true, name: true, image: true, xp: true, streak: true },
+    select: { id: true, name: true, image: true, avatarKey: true, xp: true, streak: true },
   });
 
   const isInTop = top.some((u) => u.id === userId);
@@ -22,7 +23,7 @@ export default async function LeaderboardPage() {
   if (!isInTop) {
     const meRow = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, image: true, xp: true, streak: true },
+      select: { id: true, name: true, image: true, avatarKey: true, xp: true, streak: true },
     });
     if (meRow) {
       const higherCount = await prisma.user.count({ where: { xp: { gt: meRow.xp } } });
@@ -60,14 +61,13 @@ export default async function LeaderboardPage() {
               )}
             </div>
 
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-paper-dim) text-xs font-bold">
-              {u.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={u.image} alt="" className="h-full w-full object-cover" />
-              ) : (
-                (u.name ?? "?").slice(0, 1).toUpperCase()
-              )}
-            </span>
+            <UserAvatar
+              avatarKey={u.avatarKey}
+              image={u.image}
+              name={u.name}
+              className="h-9 w-9 shrink-0 text-xs"
+              emojiClassName="text-lg"
+            />
 
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">
@@ -93,14 +93,13 @@ export default async function LeaderboardPage() {
             <div className="flex h-8 w-8 shrink-0 items-center justify-center">
               <span className="text-sm font-bold text-(--color-ink-soft)">{me.rank}</span>
             </div>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-paper-dim) text-xs font-bold">
-              {me.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={me.image} alt="" className="h-full w-full object-cover" />
-              ) : (
-                (me.name ?? "?").slice(0, 1).toUpperCase()
-              )}
-            </span>
+            <UserAvatar
+              avatarKey={me.avatarKey}
+              image={me.image}
+              name={me.name}
+              className="h-9 w-9 shrink-0 text-xs"
+              emojiClassName="text-lg"
+            />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">
                 {me.name ?? "Без имени"} <span className="text-(--color-brand-blue)">(ты)</span>

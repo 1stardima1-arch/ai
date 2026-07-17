@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, User, Send } from "lucide-react";
+import { Sparkles, User, Send, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Message = { role: "user" | "assistant"; content: string };
@@ -13,18 +13,21 @@ export function AiChat({
   placeholder = "Спроси что угодно про эту тему…",
   suggestions = [],
   autoStartMessage,
+  variant = "light",
 }: {
   taskId?: string;
   initialMessages?: Message[];
   placeholder?: string;
   suggestions?: string[];
   autoStartMessage?: string;
+  variant?: "light" | "siri";
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const autoStarted = useRef(false);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const siri = variant === "siri";
 
   function scrollToBottom() {
     requestAnimationFrame(() => {
@@ -83,30 +86,69 @@ export function AiChat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStartMessage]);
 
-  return (
-    <div className="card-surface flex h-[560px] flex-col overflow-hidden p-0">
-      <div className="flex items-center gap-2 border-b border-black/5 px-5 py-4">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
-          <Sparkles className="h-4 w-4" />
-        </span>
-        <div>
-          <div className="text-sm font-bold">Тьютор Макс</div>
-          <div className="text-xs text-(--color-brand-green)">● на связи</div>
-        </div>
-      </div>
+  const thinking = isPending && messages[messages.length - 1]?.content === "";
 
-      <div ref={scrollRef} className="scrollbar-thin flex-1 space-y-4 overflow-y-auto p-5">
+  return (
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden p-0",
+        siri ? "siri-panel h-[640px]" : "card-surface h-[560px]"
+      )}
+    >
+      {siri ? (
+        <div className="relative z-10 flex items-center gap-3 border-b border-white/10 px-5 py-4">
+          <span className="siri-orb h-9 w-9" />
+          <div>
+            <div className="text-sm font-bold text-white">Тьютор Макс</div>
+            <div className="text-xs text-white/50">твой ИИ-репетитор</div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 border-b border-black/5 px-5 py-4">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <div>
+            <div className="text-sm font-bold">Тьютор Макс</div>
+            <div className="text-xs text-(--color-brand-green)">● на связи</div>
+          </div>
+        </div>
+      )}
+
+      <div ref={scrollRef} className="scrollbar-thin relative z-10 flex-1 space-y-4 overflow-y-auto p-5">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-(--color-ink-soft)">
-            <Sparkles className="h-8 w-8 text-(--color-brand-violet)" />
-            <p>Спроси о теме, попроси объяснить ошибку или разобрать задание — отвечу дружелюбно и по делу.</p>
+          <div
+            className={cn(
+              "flex h-full flex-col items-center justify-center gap-4 text-center text-sm",
+              siri ? "text-white/60" : "text-(--color-ink-soft)"
+            )}
+          >
+            {siri ? (
+              <>
+                <span className="siri-orb h-16 w-16" />
+                <p className="font-display text-lg font-bold text-white">Чем помочь?</p>
+                <p className="max-w-xs text-white/55">
+                  Объясню тему, разберу ошибку или потренирую перед экзаменом.
+                </p>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-8 w-8 text-(--color-brand-violet)" />
+                <p>Спроси о теме, попроси объяснить ошибку или разобрать задание — отвечу дружелюбно и по делу.</p>
+              </>
+            )}
             {suggestions.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2 pt-2">
+              <div className="flex flex-wrap justify-center gap-2 pt-1">
                 {suggestions.map((s) => (
                   <button
                     key={s}
                     onClick={() => send(s)}
-                    className="rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold hover:border-(--color-brand-blue)"
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-semibold",
+                      siri
+                        ? "siri-chip"
+                        : "border border-black/10 bg-white hover:border-(--color-brand-blue)"
+                    )}
                   >
                     {s}
                   </button>
@@ -128,23 +170,40 @@ export function AiChat({
                 m.role === "user" ? "ml-auto flex-row-reverse" : ""
               )}
             >
-              <span
-                className={cn(
-                  "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-                  m.role === "user" ? "bg-black/5" : "btn-gradient"
-                )}
-              >
-                {m.role === "user" ? <User className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-              </span>
+              {siri ? (
+                m.role === "assistant" && <span className="siri-orb mt-1 h-6 w-6 shrink-0" />
+              ) : (
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
+                    m.role === "user" ? "bg-black/5" : "btn-gradient"
+                  )}
+                >
+                  {m.role === "user" ? <User className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+                </span>
+              )}
               <div
                 className={cn(
                   "whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                  m.role === "user"
-                    ? "rounded-tr-sm bg-(--color-paper-dim)"
-                    : "rounded-tl-sm bg-(--color-sky-2)"
+                  siri
+                    ? m.role === "user"
+                      ? "siri-bubble-user rounded-br-sm"
+                      : "siri-bubble-ai rounded-tl-sm"
+                    : m.role === "user"
+                      ? "rounded-tr-sm bg-(--color-paper-dim)"
+                      : "rounded-tl-sm bg-(--color-sky-2)"
                 )}
               >
-                {m.content || (isPending && i === messages.length - 1 ? "…" : "")}
+                {m.content ||
+                  (thinking && i === messages.length - 1 ? (
+                    <span className="siri-thinking flex items-center gap-1 py-1">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  ) : (
+                    ""
+                  ))}
               </div>
             </motion.div>
           ))}
@@ -156,20 +215,33 @@ export function AiChat({
           e.preventDefault();
           send(input);
         }}
-        className="flex items-center gap-2 border-t border-black/5 p-4"
+        className={cn(
+          "relative z-10 flex items-center gap-2 p-4",
+          siri ? "border-t border-white/10" : "border-t border-black/5"
+        )}
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 rounded-full bg-(--color-paper-dim) px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
+          className={cn(
+            "flex-1 rounded-full px-4 py-2.5 text-sm",
+            siri
+              ? "siri-input"
+              : "bg-(--color-paper-dim) outline-none focus:ring-2 focus:ring-(--color-brand-blue)"
+          )}
         />
         <button
           type="submit"
           disabled={isPending || !input.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full btn-gradient disabled:opacity-40"
+          className={cn(
+            "press-spring flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:opacity-40",
+            siri
+              ? "bg-gradient-to-br from-[#ff5f9e] via-[#b06bff] to-[#5a8dff] text-white shadow-[0_6px_20px_rgba(176,107,255,0.45)]"
+              : "btn-gradient"
+          )}
         >
-          <Send className="h-4 w-4" />
+          {siri ? <ArrowUp className="h-4.5 w-4.5" strokeWidth={2.5} /> : <Send className="h-4 w-4" />}
         </button>
       </form>
     </div>

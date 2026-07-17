@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getDashboardOverview } from "@/lib/stats";
+import { getDailyTasks } from "@/lib/daily";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { LinkButton } from "@/components/ui/button";
 import { AnimatedBar } from "@/components/motion/animated-bar";
-import { ArrowRight, Target, TrendingUp, ListChecks } from "lucide-react";
+import { ArrowRight, Target, TrendingUp, ListChecks, CalendarDays, CheckCircle2 } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const { totalAttempts, accuracy, subjects, recentAttempts } = await getDashboardOverview(
-    session!.user.id
-  );
+  const [{ totalAttempts, accuracy, subjects, recentAttempts }, daily] = await Promise.all([
+    getDashboardOverview(session!.user.id),
+    getDailyTasks(session!.user.id),
+  ]);
 
   const firstName = session!.user.name?.split(" ")[0] ?? "";
   const inProgress = subjects.filter((s) => s.solvedTasks > 0 && s.progressPercent < 100);
@@ -68,6 +70,51 @@ export default async function DashboardPage() {
           </div>
           <ArrowRight className="h-5 w-5 shrink-0" />
         </Link>
+      )}
+
+      {daily.tasks.length > 0 && (
+        <div className="mt-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">
+              <CalendarDays className="h-4 w-4" />
+              Задания дня
+            </h2>
+            <span className="text-xs font-semibold text-(--color-ink-soft)">
+              Новый набор каждый день
+            </span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-3">
+            {daily.tasks.map((t) => (
+              <Link
+                key={t.id}
+                href={`/app/practice/${t.id}`}
+                className="card-surface press-spring flex items-center gap-3 p-4"
+              >
+                <span
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: `${t.subject.color}1a` }}
+                >
+                  <SubjectIcon icon={t.subject.icon} className="h-4.5 w-4.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold">
+                    №{t.number} · {t.topic.name}
+                  </div>
+                  <div className="truncate text-xs text-(--color-ink-soft)">{t.subject.name}</div>
+                </div>
+                {t.attempted ? (
+                  <CheckCircle2
+                    className={`h-5 w-5 shrink-0 ${
+                      t.solvedCorrect ? "text-(--color-brand-green)" : "text-(--color-brand-amber)"
+                    }`}
+                  />
+                ) : (
+                  <ArrowRight className="h-4 w-4 shrink-0 text-(--color-ink-soft)" />
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { NavLinks } from "@/components/app/nav-links";
 import { MobileNav } from "@/components/app/mobile-nav";
+import { UserAvatar } from "@/components/app/user-avatar";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
@@ -15,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, image: true, xp: true, streak: true },
+    select: { name: true, image: true, avatarKey: true, xp: true, streak: true },
   });
   if (!user) redirect("/login");
 
@@ -61,17 +62,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Flame className="h-4 w-4 text-(--color-brand-amber)" />
               {user.streak}
             </div>
-            <div className="liquid-glass flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3">
-              <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-(--color-paper-dim) text-xs font-bold">
-                {user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  (user.name ?? "?").slice(0, 1).toUpperCase()
-                )}
-              </span>
+            <Link href="/app/profile" className="liquid-glass press-spring flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3">
+              <UserAvatar
+                avatarKey={user.avatarKey}
+                image={user.image}
+                name={user.name}
+                className="h-7 w-7 text-xs"
+                emojiClassName="text-base"
+              />
               <span className="hidden text-sm font-semibold sm:inline">{user.name}</span>
-            </div>
+            </Link>
             <SignOutButton />
           </div>
 
