@@ -124,7 +124,9 @@ jobs:
             echo "⚠️ Эта сборка подписана ВРЕМЕННЫМ ключом (см. предупреждение выше) — его сертификат заведомо не совпадает с assetlinks.json на сайте. **Приложение будет открываться с адресной строкой сверху, как обычный сайт**, пока не почините ANDROID_KEYSTORE_BASE64 и не пересоберёте." >> "$GITHUB_STEP_SUMMARY"
           else
             HTTP_CODE=$(curl -s -o /tmp/assetlinks_live.json -w "%{http_code}" "$ASSETLINKS_URL" || echo "000")
+            echo "GET $ASSETLINKS_URL -> HTTP $HTTP_CODE"
             if [ "$HTTP_CODE" != "200" ]; then
+              echo "RESULT: UNREACHABLE — likely Vercel Deployment Protection"
               {
                 echo "❌ assetlinks.json недоступен по этому адресу (HTTP $HTTP_CODE)."
                 echo ""
@@ -136,8 +138,10 @@ jobs:
               LIVE_FP=$(jq -re '.[0].target.sha256_cert_fingerprints[0]' /tmp/assetlinks_live.json 2>/dev/null || echo "PARSE_ERROR")
               echo "Fingerprint в живом assetlinks.json: $LIVE_FP"
               if [ "$LIVE_FP" = "$ACTUAL_FP" ] && [ -n "$ACTUAL_FP" ]; then
+                echo "RESULT: MATCH — app will open fullscreen, no address bar"
                 echo "✅ Сертификат сборки совпадает с assetlinks.json на сайте — Digital Asset Links верификация должна пройти. Приложение откроется **без адресной строки, как полноценное приложение**. (Если после установки всё ещё видна адресная строка — подожди немного или переустанови APK: Android иногда кеширует результат старой проверки на несколько часов.)" >> "$GITHUB_STEP_SUMMARY"
               else
+                echo "RESULT: MISMATCH — app will show the address bar"
                 {
                   echo "❌ Сертификаты не совпадают — Digital Asset Links верификация провалится, приложение будет открываться с адресной строкой."
                   echo ""
