@@ -15,7 +15,32 @@
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const http = require("http");
 const { TwaManifest, TwaGenerator, ConsoleLog } = require("@bubblewrap/core");
+
+const CONTENT_TYPES = { ".png": "image/png", ".json": "application/json", ".svg": "image/svg+xml" };
+
+// Bubblewrap downloads the icon PNGs over HTTP from iconUrl/maskableIconUrl. Deploy previews
+// (e.g. Vercel) are often gated behind auth/SSO, which would 401 that download in CI even
+// though the manifest itself is readable from the repo. Serving the same files from a local
+// server sidesteps that entirely — the real production origin is still used for everything
+// that actually matters for the installed app (host, start_url, Digital Asset Links).
+function startStaticServer(rootDir) {
+  return new Promise((resolve) => {
+    const server = http.createServer((req, res) => {
+      const filePath = path.join(rootDir, decodeURIComponent(req.url.split("?")[0]));
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          res.writeHead(404);
+          return res.end();
+        }
+        res.writeHead(200, { "Content-Type": CONTENT_TYPES[path.extname(filePath)] || "application/octet-stream" });
+        res.end(data);
+      });
+    });
+    server.listen(0, "127.0.0.1", () => resolve({ server, port: server.address().port }));
+  });
+}
 
 async function main() {
   const webManifestUrl =
@@ -46,9 +71,34 @@ async function main() {
   const manifestFile = path.join(targetDir, "twa-manifest.json");
   await twaManifest.saveToFile(manifestFile);
 
-  console.log(`Generating Android project in ${targetDir} ...`);
+  // Redirect icon downloads to a local static server so this step doesn't depend on the
+  // live deployment being publicly reachable (see startStaticServer above). This rewrite is
+  // in-memory only — the twa-manifest.json already saved to disk keeps the real production
+  // icon URLs.
+  const publicDir = path.resolve(__dirname, "../../public");
+  const { server, port } = await startStaticServer(publicDir);
+  const remoteOrigin = new URL(webManifestUrl).origin;
+  const localOrigin = `http://127.0.0.1:${port}`;
+  if (twaManifest.iconUrl) twaManifest.iconUrl = twaManifest.iconUrl.replace(remoteOrigin, localOrigin);
+  if (twaManifest.maskableIconUrl) {
+    twaManifest.maskableIconUrl = twaManifest.maskableIconUrl.replace(remoteOrigin, localOrigin);
+  }
+  if (twaManifest.monochromeIconUrl) {
+    twaManifest.monochromeIconUrl = twaManifest.monochromeIconUrl.replace(remoteOrigin, localOrigin);
+  }
+  // TwaGenerator also re-fetches the web manifest itself (to bundle a copy into the Android
+  // assets) — redirect that too, for the same reason as the icons above.
+  if (twaManifest.webManifestUrl) {
+    twaManifest.webManifestUrl = new URL(twaManifest.webManifestUrl.toString().replace(remoteOrigin, localOrigin));
+  }
+
+  console.log(`Generating Android project in ${targetDir} (icons served locally from ${localOrigin}) ...`);
   const generator = new TwaGenerator();
-  await generator.createTwaProject(targetDir, twaManifest, new ConsoleLog("twa-generate"));
+  try {
+    await generator.createTwaProject(targetDir, twaManifest, new ConsoleLog("twa-generate"));
+  } finally {
+    server.close();
+  }
 
   // Bubblewrap's template only lists google()/jcenter() as Gradle repositories, but
   // jcenter() has been shut down and androidbrowserhelper is published on Maven Central —
@@ -67,7 +117,9 @@ async function main() {
   console.log("Done. Project ready for `bubblewrap build`.");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
