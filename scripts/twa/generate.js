@@ -26,8 +26,15 @@ async function main() {
   const versionCode = Number(process.env.APP_VERSION_CODE || 1);
   const versionName = process.env.APP_VERSION_NAME || "1.0.0";
 
-  console.log(`Fetching web manifest from ${webManifestUrl} ...`);
-  const twaManifest = await TwaManifest.fromWebManifest(webManifestUrl);
+  // Read the web manifest straight from the repo (rather than fetching the live deployment)
+  // so this step can't fail because a preview deployment is stale or momentarily unreachable —
+  // the checked-out public/manifest.json is always the correct, current source of truth for
+  // app name/icons/colors. The live URL is still used as the base for resolving icon/start_url
+  // paths to absolute URLs, since the actual icon PNGs do need to be downloaded from there.
+  const localManifestPath = path.resolve(__dirname, "../../public/manifest.json");
+  console.log(`Reading web manifest from ${localManifestPath} (resolved against ${webManifestUrl}) ...`);
+  const webManifestJson = JSON.parse(fs.readFileSync(localManifestPath, "utf8"));
+  const twaManifest = TwaManifest.fromWebManifestJson(new URL(webManifestUrl), webManifestJson);
 
   twaManifest.packageId = packageId;
   twaManifest.appVersionCode = versionCode;
