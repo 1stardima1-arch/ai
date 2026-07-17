@@ -99,6 +99,57 @@ jobs:
           BUBBLEWRAP_KEY_PASSWORD: ${{ steps.keystore.outputs.usingFallback == 'true' && 'temporary123456' || secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: node ${{ github.workspace }}/.bubblewrap-tools/node_modules/.bin/bubblewrap build --manifest=./twa-manifest.json
 
+      # Whether the installed app opens fullscreen (looks/feels like a real app) or shows
+      # Chrome's address bar on top (looks like "just a link to a website") is decided entirely
+      # by Digital Asset Link verification: Android must be able to prove the APK's signing
+      # certificate matches the one published at https://<domain>/.well-known/assetlinks.json.
+      # This step checks that for real, using the actual cert from this build and the *live*
+      # assetlinks.json (GitHub Actions has full internet access, unlike a typical sandbox), so
+      # the summary tells you definitively whether this build will render as a full app.
+      - name: Verify Digital Asset Links (fullscreen app vs. browser address bar)
+        env:
+          WEB_MANIFEST_URL: ${{ inputs.webManifestUrl }}
+          USED_FALLBACK: ${{ steps.keystore.outputs.usingFallback }}
+          KEYSTORE_PASSWORD: ${{ steps.keystore.outputs.usingFallback == 'true' && 'temporary123456' || secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ steps.keystore.outputs.alias }}
+        run: |
+          ORIGIN=$(echo "$WEB_MANIFEST_URL" | sed -E 's#(https?://[^/]+).*#\1#')
+          ASSETLINKS_URL="$ORIGIN/.well-known/assetlinks.json"
+          ACTUAL_FP=$(keytool -list -v -keystore android-twa/android-keystore -alias "$KEY_ALIAS" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | grep "SHA256:" | head -1 | sed 's/.*SHA256: //')
+          echo "Signing cert SHA256 for this build: $ACTUAL_FP"
+
+          echo "### 🔍 Digital Asset Links ($ASSETLINKS_URL)" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$USED_FALLBACK" = "true" ]; then
+            echo "⚠️ Эта сборка подписана ВРЕМЕННЫМ ключом (см. предупреждение выше) — его сертификат заведомо не совпадает с assetlinks.json на сайте. **Приложение будет открываться с адресной строкой сверху, как обычный сайт**, пока не почините ANDROID_KEYSTORE_BASE64 и не пересоберёте." >> "$GITHUB_STEP_SUMMARY"
+          else
+            HTTP_CODE=$(curl -s -o /tmp/assetlinks_live.json -w "%{http_code}" "$ASSETLINKS_URL" || echo "000")
+            if [ "$HTTP_CODE" != "200" ]; then
+              {
+                echo "❌ assetlinks.json недоступен по этому адресу (HTTP $HTTP_CODE)."
+                echo ""
+                echo "Скорее всего на сайте ещё включена **Vercel Deployment Protection** — она блокирует любые запросы без входа в Vercel, включая проверку Google, не только твой браузер. Отключи её: Vercel → Settings → Deployment Protection → выключить (или ограничить только Preview Deployments)."
+                echo ""
+                echo "Пока это не исправлено, **приложение будет открываться как обычный сайт с адресной строкой**, а не как полноценное приложение."
+              } >> "$GITHUB_STEP_SUMMARY"
+            else
+              LIVE_FP=$(jq -re '.[0].target.sha256_cert_fingerprints[0]' /tmp/assetlinks_live.json 2>/dev/null || echo "PARSE_ERROR")
+              echo "Fingerprint в живом assetlinks.json: $LIVE_FP"
+              if [ "$LIVE_FP" = "$ACTUAL_FP" ] && [ -n "$ACTUAL_FP" ]; then
+                echo "✅ Сертификат сборки совпадает с assetlinks.json на сайте — Digital Asset Links верификация должна пройти. Приложение откроется **без адресной строки, как полноценное приложение**. (Если после установки всё ещё видна адресная строка — подожди немного или переустанови APK: Android иногда кеширует результат старой проверки на несколько часов.)" >> "$GITHUB_STEP_SUMMARY"
+              else
+                {
+                  echo "❌ Сертификаты не совпадают — Digital Asset Links верификация провалится, приложение будет открываться с адресной строкой."
+                  echo ""
+                  echo "- Сертификат этой сборки: \`$ACTUAL_FP\`"
+                  echo "- Сертификат в живом assetlinks.json: \`$LIVE_FP\`"
+                  echo ""
+                  echo "Обнови \`sha256_cert_fingerprints\` в \`public/.well-known/assetlinks.json\` на первое значение, задеплой сайт и пересобери APK."
+                } >> "$GITHUB_STEP_SUMMARY"
+              fi
+            fi
+          fi
+
       - name: Summary
         if: always()
         run: |
