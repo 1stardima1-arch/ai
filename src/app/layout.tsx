@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
+import { SwRegister } from "@/components/pwa/sw-register";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -47,6 +48,7 @@ export default function RootLayout({
       className={`${manrope.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-(--color-paper) text-(--color-ink)">
+        <SwRegister />
         {children}
       </body>
     </html>

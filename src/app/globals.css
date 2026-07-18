@@ -316,6 +316,39 @@ body {
   opacity: 0.75;
 }
 
+/* ---------- Onboarding (How We Feel-style squishy blobs) ---------- */
+
+.blob-morph {
+  background: rgba(255, 255, 255, 0.16);
+  animation: blob-morph 14s ease-in-out infinite, blob-drift 22s ease-in-out infinite;
+  will-change: border-radius, transform;
+}
+.blob-morph-2 {
+  animation-delay: -5s, -8s;
+  background: rgba(255, 255, 255, 0.1);
+}
+.blob-morph-3 {
+  animation-delay: -9s, -15s;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+@keyframes blob-morph {
+  0%, 100% { border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%; }
+  25% { border-radius: 45% 55% 40% 60% / 60% 42% 58% 40%; }
+  50% { border-radius: 60% 40% 58% 42% / 42% 55% 45% 58%; }
+  75% { border-radius: 42% 58% 45% 55% / 55% 45% 60% 40%; }
+}
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  33% { transform: translate(4%, -5%) rotate(8deg) scale(1.06); }
+  66% { transform: translate(-4%, 4%) rotate(-6deg) scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob-morph { animation: none; }
+}
+
 /* ---------- Siri-style AI chat ---------- */
 
 .siri-panel {
