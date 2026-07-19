@@ -1,29 +1,51 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { getDashboardOverview } from "@/lib/stats";
 import { getDailyTasks } from "@/lib/daily";
+import { nextExamDate, daysUntil } from "@/lib/exam-date";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { LinkButton } from "@/components/ui/button";
 import { AnimatedBar } from "@/components/motion/animated-bar";
-import { ArrowRight, Target, TrendingUp, ListChecks, CalendarDays, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Target, TrendingUp, ListChecks, CalendarDays, CheckCircle2, Hourglass } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const [{ totalAttempts, accuracy, subjects, recentAttempts }, daily] = await Promise.all([
-    getDashboardOverview(session!.user.id),
-    getDailyTasks(session!.user.id),
+  const userId = session!.user.id;
+  const [{ totalAttempts, accuracy, subjects, recentAttempts }, daily, enrollments] = await Promise.all([
+    getDashboardOverview(userId),
+    getDailyTasks(userId),
+    prisma.userSubject.findMany({
+      where: { userId },
+      select: { subject: { select: { examType: true } } },
+      take: 1,
+    }),
   ]);
 
   const firstName = session!.user.name?.split(" ")[0] ?? "";
   const inProgress = subjects.filter((s) => s.solvedTasks > 0 && s.progressPercent < 100);
   const continueSubject = inProgress[0] ?? subjects[0];
+  const examLabel = enrollments[0]?.subject.examType === "OGE" ? "ОГЭ" : "ЕГЭ";
+  const daysLeft = daysUntil(nextExamDate());
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
-        Привет{firstName ? `, ${firstName}` : ""} 👋
-      </h1>
-      <p className="mt-1 text-(--color-ink-soft)">Вот как идёт подготовка сегодня.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-extrabold sm:text-3xl">
+            Привет{firstName ? `, ${firstName}` : ""} 👋
+          </h1>
+          <p className="mt-1 text-(--color-ink-soft)">Вот как идёт подготовка сегодня.</p>
+        </div>
+        {daysLeft > 0 && daysLeft <= 365 && (
+          <div className="liquid-glass flex items-center gap-2.5 rounded-full px-4 py-2.5">
+            <Hourglass className="h-4 w-4 text-(--color-brand-pink)" />
+            <span className="text-sm font-bold">
+              До {examLabel}: <span className="gradient-text">{daysLeft} дн.</span>
+            </span>
+          </div>
+        )}
+      </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="card-surface p-5">
