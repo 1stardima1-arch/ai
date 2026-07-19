@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 // "Задания дня": a small set that deterministically rotates every day, so
@@ -23,21 +24,63 @@ function mulberry32(seed: number) {
   };
 }
 
+// Difficulty band (1–5 scale) matching the student's self-assessed level.
+function difficultyRange(prepLevel: string | null): [number, number] {
+  switch (prepLevel) {
+    case "BEGINNER":
+      return [1, 2];
+    case "ADVANCED":
+      return [3, 5];
+    default:
+      return [2, 4];
+  }
+}
+
 export async function getDailyTasks(userId: string, count = 3) {
   const dayKey = moscowDayKey();
 
-  // Auto-graded tasks only: the daily set should be quickly solvable solo.
-  const tasks = await prisma.task.findMany({
-    where: { type: { in: ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE", "MATCHING"] } },
-    select: {
-      id: true,
-      number: true,
-      difficulty: true,
-      subject: { select: { id: true, name: true, slug: true, color: true, icon: true } },
-      topic: { select: { name: true } },
-    },
-    orderBy: { id: "asc" }, // stable base order → deterministic shuffle
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { prepLevel: true, enrollments: { select: { subjectId: true } } },
   });
+  const enrolledIds = user?.enrollments.map((e) => e.subjectId) ?? [];
+  const [minD, maxD] = difficultyRange(user?.prepLevel ?? null);
+
+  // Auto-graded tasks only: the daily set should be quickly solvable solo.
+  // Personalised: the student's chosen subjects and a difficulty band for
+  // their level — with graceful fallback if those filters empty the pool.
+  const baseWhere: Prisma.TaskWhereInput = {
+    type: { in: ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE", "MATCHING"] },
+  };
+  const select = {
+    id: true,
+    number: true,
+    difficulty: true,
+    subject: { select: { id: true, name: true, slug: true, color: true, icon: true } },
+    topic: { select: { name: true } },
+  } as const;
+  const orderBy = { id: "asc" as const }; // stable base order → deterministic shuffle
+
+  let tasks = await prisma.task.findMany({
+    where: {
+      ...baseWhere,
+      difficulty: { gte: minD, lte: maxD },
+      ...(enrolledIds.length > 0 ? { subjectId: { in: enrolledIds } } : {}),
+    },
+    select,
+    orderBy,
+  });
+  if (tasks.length < count && enrolledIds.length > 0) {
+    // not enough at this difficulty in the chosen subjects — drop the difficulty filter
+    tasks = await prisma.task.findMany({
+      where: { ...baseWhere, subjectId: { in: enrolledIds } },
+      select,
+      orderBy,
+    });
+  }
+  if (tasks.length < count) {
+    tasks = await prisma.task.findMany({ where: baseWhere, select, orderBy });
+  }
   if (tasks.length === 0) return { dayKey, tasks: [] };
 
   // Seeded shuffle of the whole bank, then take the first task of each

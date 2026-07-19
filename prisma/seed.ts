@@ -1,7 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { subjects, achievements } from "./seed-data";
+import { subjects as coreSubjects, achievements } from "./seed-data";
+import { extraSubjects } from "./seed-data-extra";
 
 const prisma = new PrismaClient();
+const subjects = [...coreSubjects, ...extraSubjects];
 
 async function main() {
   console.log("Seeding subjects, topics and tasks...");

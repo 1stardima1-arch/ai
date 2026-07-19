@@ -44,6 +44,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const { prepLevel } = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { prepLevel: true },
+  });
+
   await prisma.aiMessage.create({
     data: { userId, role: "user", content: message, taskId },
   });
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       let full = "";
       try {
-        for await (const chunk of streamTutorReply(history, context)) {
+        for await (const chunk of streamTutorReply(history, context, prepLevel)) {
           full += chunk;
           controller.enqueue(encoder.encode(chunk));
         }

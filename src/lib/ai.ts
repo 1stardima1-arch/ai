@@ -33,19 +33,34 @@ export const TUTOR_SYSTEM_PROMPT = `Ты — «Тьютор Макс», ИИ-р�
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
+// How the tutor should adapt to the student's self-assessed level (from onboarding).
+export function levelInstruction(prepLevel: string | null | undefined): string {
+  switch (prepLevel) {
+    case "BEGINNER":
+      return "Уровень ученика: НОВИЧОК, готовится с нуля. Объясняй максимально просто, маленькими шагами, с бытовыми примерами. Избегай терминов без расшифровки, чаще подбадривай.";
+    case "ADVANCED":
+      return "Уровень ученика: ПРОДВИНУТЫЙ, целится в высокие баллы. Можно говорить компактно и по делу, разбирать тонкости, ловушки экзамена и сложные случаи. Предлагай задачи посложнее.";
+    case "INTERMEDIATE":
+      return "Уровень ученика: СРЕДНИЙ — база есть, но есть пробелы. Объясняй ясно, сверяйся, что базовые шаги понятны, и закрывай типичные пробелы.";
+    default:
+      return "";
+  }
+}
+
 export async function* streamTutorReply(
   history: ChatMessage[],
-  context?: string
+  context?: string,
+  prepLevel?: string | null
 ) {
   const groq = getClient();
 
+  const levelNote = levelInstruction(prepLevel);
+  const systemParts = [TUTOR_SYSTEM_PROMPT];
+  if (levelNote) systemParts.push(levelNote);
+  if (context) systemParts.push(`Контекст текущего задания ученика:\n${context}`);
+
   const messages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
-    {
-      role: "system",
-      content: context
-        ? `${TUTOR_SYSTEM_PROMPT}\n\nКонтекст текущего задания ученика:\n${context}`
-        : TUTOR_SYSTEM_PROMPT,
-    },
+    { role: "system", content: systemParts.join("\n\n") },
     ...history,
   ];
 

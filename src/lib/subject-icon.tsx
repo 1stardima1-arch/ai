@@ -1,4 +1,14 @@
-import { Sigma, PenLine, Calculator, BookOpenText, BookOpen } from "lucide-react";
+import {
+  Sigma,
+  PenLine,
+  Calculator,
+  BookOpenText,
+  BookOpen,
+  Users,
+  Cpu,
+  Atom,
+  Dna,
+} from "lucide-react";
 import type { ComponentType } from "react";
 
 const map: Record<string, ComponentType<{ className?: string; strokeWidth?: number }>> = {
@@ -6,6 +16,10 @@ const map: Record<string, ComponentType<{ className?: string; strokeWidth?: numb
   "pen-line": PenLine,
   calculator: Calculator,
   "book-open-text": BookOpenText,
+  users: Users,
+  cpu: Cpu,
+  atom: Atom,
+  dna: Dna,
 };
 
 export function SubjectIcon({ icon, className }: { icon: string; className?: string }) {

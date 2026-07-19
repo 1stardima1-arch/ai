@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/button";
-import { AnimatedNumber } from "@/components/motion/animated-number";
 
 const avatars = [
   "linear-gradient(135deg,#fca5a5,#f472b6)",
@@ -41,7 +40,7 @@ export function Hero() {
             ))}
           </span>
           <span className="gradient-text font-bold">
-            Уже готовятся <AnimatedNumber value={12000} />+ учеников
+            Теория · задания ФИПИ · ИИ-разбор ошибок
           </span>
         </Link>
 

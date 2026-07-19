@@ -17,6 +17,9 @@ model User {
   image         String?
   avatarKey     String?
   nameChangedAt DateTime?
+  // Self-assessed preparation level from onboarding: BEGINNER | INTERMEDIATE | ADVANCED.
+  // Drives task difficulty selection and how the AI tutor pitches explanations.
+  prepLevel     String?
   createdAt     DateTime  @default(now())
 
   // gamification

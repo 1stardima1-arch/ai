@@ -15,10 +15,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, image: true, avatarKey: true, xp: true, streak: true },
-  });
+  const [user, allSubjects] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, image: true, avatarKey: true, xp: true, streak: true, prepLevel: true },
+    }),
+    prisma.subject.findMany({
+      orderBy: { order: "asc" },
+      select: { id: true, name: true, examType: true, color: true, icon: true },
+    }),
+  ]);
   if (!user) redirect("/login");
 
   const level = levelFromXp(user.xp);
@@ -26,7 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-(--color-paper)">
-      <Onboarding />
+      <Onboarding needsSetup={!user.prepLevel} subjects={allSubjects} />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
         <div className="blob blob-pink" />
