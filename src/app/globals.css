@@ -489,6 +489,31 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ---------- native page-navigation view transitions ---------- */
+
+/* Persistent app chrome (sidebar, mobile nav, top bar) keeps a stable
+   viewTransitionName (see src/app/app/layout.tsx / mobile-nav.tsx) so it
+   doesn't crossfade/flash on every navigation — only the content area does. */
+::view-transition-group(app-shell-sidebar),
+::view-transition-group(app-shell-mobilenav),
+::view-transition-group(app-shell-topbar) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}
+
 ::selection {
   background: var(--color-brand-blue);
   color: white;

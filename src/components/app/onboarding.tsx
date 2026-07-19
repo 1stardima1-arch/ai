@@ -6,6 +6,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { completeSetup } from "@/lib/actions/onboarding";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { cn } from "@/lib/utils";
+import { IntroParticles, IntroBadge, StaggerTitle } from "@/components/app/intro-fx";
 
 const SEEN_FLAG = "ball-onboarded-v1";
 
@@ -127,6 +128,7 @@ export function Onboarding({
       <div className="blob-morph absolute left-[-18%] top-[-12%] h-[55vw] w-[55vw] max-h-[420px] max-w-[420px]" />
       <div className="blob-morph blob-morph-2 absolute right-[-15%] top-[30%] h-[48vw] w-[48vw] max-h-[380px] max-w-[380px]" />
       <div className="blob-morph blob-morph-3 absolute bottom-[-16%] left-[10%] h-[50vw] w-[50vw] max-h-[400px] max-w-[400px]" />
+      {phase === "slides" && <IntroParticles />}
 
       {phase === "slides" && !needsSetup && (
         <button
@@ -151,16 +153,16 @@ export function Onboarding({
               transition={{ type: "spring", stiffness: 260, damping: 24 }}
               className="my-auto flex flex-col items-center"
             >
-              <motion.span
-                className="blob-morph relative mb-8 flex h-32 w-32 items-center justify-center bg-white/25 text-6xl"
-                initial={reduceMotion ? false : { scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
+              <IntroBadge emoji={slide.emoji} />
+              <StaggerTitle text={slide.title} className="font-display max-w-sm text-3xl font-extrabold sm:text-4xl" />
+              <motion.p
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="mt-4 max-w-xs text-lg leading-relaxed text-white/85"
               >
-                {slide.emoji}
-              </motion.span>
-              <h1 className="font-display max-w-sm text-3xl font-extrabold sm:text-4xl">{slide.title}</h1>
-              <p className="mt-4 max-w-xs text-lg leading-relaxed text-white/85">{slide.text}</p>
+                {slide.text}
+              </motion.p>
             </motion.div>
           )}
 

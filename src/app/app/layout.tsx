@@ -39,7 +39,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="blob blob-green" />
       </div>
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
-        <aside className="liquid-glass glass-sheen sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] p-5 lg:flex">
+        <aside
+          className="liquid-glass glass-sheen sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] p-5 lg:flex"
+          style={{ viewTransitionName: "app-shell-sidebar" } as React.CSSProperties}
+        >
           <Link href="/" className="flex items-center gap-2 px-1 font-display text-lg font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -65,7 +68,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </aside>
 
         <div className="min-w-0 flex-1 pb-20 lg:pb-0">
-          <div className="mb-6 flex items-center justify-end gap-3">
+          <div
+            className="mb-6 flex items-center justify-end gap-3"
+            style={{ viewTransitionName: "app-shell-topbar" } as React.CSSProperties}
+          >
             <div className="liquid-glass flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold lg:hidden">
               <Flame className="h-4 w-4 text-(--color-brand-amber)" />
               {user.streak}

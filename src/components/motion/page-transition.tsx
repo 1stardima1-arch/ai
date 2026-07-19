@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ViewTransition } from "react";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 const ENTRY_FLAG = "ball-app-entered";
 
-// iOS-style page enter: content springs in quickly; the Siri rainbow edge glow
-// plays only on the first entry into the app this session and whenever the AI
-// assistant tab is opened (it's the "AI moment", not a every-page effect).
+// Route content is wrapped in React's native <ViewTransition> (browser View
+// Transitions API, enabled via experimental.viewTransition in next.config.ts)
+// so every navigation gets a GPU-composited crossfade instead of a hard cut —
+// this is what actually fixes "переход очень резкий": native transitions are
+// smooth even on slower phones, unlike a JS-driven fade that competes with
+// the rest of the page for the main thread during a route change.
+// The Siri rainbow edge glow plays only on the first entry into the app this
+// session and whenever the AI assistant tab is opened (it's the "AI moment",
+// not an every-page effect).
 export function PageTransition({ children, glow = "auto" }: { children: ReactNode; glow?: "auto" | "never" }) {
   const reduceMotion = useReducedMotion();
   const pathname = usePathname();
@@ -37,13 +43,7 @@ export function PageTransition({ children, glow = "auto" }: { children: ReactNod
           onAnimationComplete={() => setShowGlow(false)}
         />
       )}
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.99 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.7 }}
-      >
-        {children}
-      </motion.div>
+      <ViewTransition default={reduceMotion ? "none" : "auto"}>{children}</ViewTransition>
     </>
   );
 }

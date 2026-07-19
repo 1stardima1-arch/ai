@@ -24,17 +24,17 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="liquid-glass glass-sheen fixed inset-x-3 bottom-3 z-40 flex items-center justify-between rounded-full px-2 py-2 lg:hidden">
+    <nav
+      className="liquid-glass glass-sheen fixed inset-x-3 bottom-3 z-40 flex items-center justify-between rounded-full px-2 py-2 lg:hidden"
+      style={{ viewTransitionName: "app-shell-mobilenav" } as React.CSSProperties}
+    >
       {links.map((l) => {
         const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
         return (
           <Link
             key={l.href}
             href={l.href}
-            className={cn(
-              "press-spring relative flex flex-1 flex-col items-center gap-0.5 rounded-full py-2 text-[0.65rem] font-semibold transition-colors duration-300",
-              active ? "text-(--color-brand-blue)" : "text-(--color-ink-soft)"
-            )}
+            className="relative flex flex-1 flex-col items-center"
           >
             {active && (
               <motion.span
@@ -43,8 +43,20 @@ export function MobileNav() {
                 transition={{ type: "spring", stiffness: 420, damping: 32 }}
               />
             )}
-            <l.icon className="relative z-10 h-5 w-5" strokeWidth={2.2} />
-            <span className="relative z-10">{l.label}</span>
+            {/* whileTap (pointer-event driven) instead of CSS :active — fires
+                reliably even on a fast tap that immediately navigates away,
+                unlike :active which real mobile browsers often skip in that case. */}
+            <motion.span
+              whileTap={{ scale: 0.86 }}
+              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+              className={cn(
+                "relative z-10 flex flex-col items-center gap-0.5 py-2 text-[0.65rem] font-semibold transition-colors duration-300",
+                active ? "text-(--color-brand-blue)" : "text-(--color-ink-soft)"
+              )}
+            >
+              <l.icon className="h-5 w-5" strokeWidth={2.2} />
+              {l.label}
+            </motion.span>
           </Link>
         );
       })}

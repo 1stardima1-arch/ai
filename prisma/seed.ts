@@ -51,27 +51,46 @@ async function main() {
         },
       });
 
-      // Re-seeding replaces this topic's tasks (dev-friendly, idempotent).
-      await prisma.task.deleteMany({ where: { topicId: dbTopic.id } });
+      // Backfill slugs for tasks created before this field existed, in their
+      // original creation order — matches how they were originally seeded,
+      // so the upsert below updates them in place instead of duplicating.
+      const unslugged = await prisma.task.findMany({
+        where: { topicId: dbTopic.id, slug: null },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      });
+      for (const [i, t] of unslugged.entries()) {
+        await prisma.task.update({ where: { id: t.id }, data: { slug: `t${i + 1}` } });
+      }
 
+      // Upsert each task by its stable position in the seed array (slug =
+      // "t1", "t2", ...) instead of delete+recreate: this runs automatically
+      // on every deploy (see package.json's build script), and deleting
+      // tasks would cascade-delete every user's Attempt history for them.
       const createdTasks = [];
-      for (const task of topic.tasks) {
-        const created = await prisma.task.create({
-          data: {
-            subjectId: dbSubject.id,
-            topicId: dbTopic.id,
-            number: task.number,
-            type: task.type,
-            statement: task.statement,
-            options: task.options ?? undefined,
-            correctAnswer: task.correctAnswer,
-            explanation: task.explanation,
-            difficulty: task.difficulty,
-            maxScore: task.maxScore ?? 1,
-          },
+      for (const [taskIndex, task] of topic.tasks.entries()) {
+        const slug = `t${taskIndex + 1}`;
+        const data = {
+          subjectId: dbSubject.id,
+          topicId: dbTopic.id,
+          number: task.number,
+          type: task.type,
+          statement: task.statement,
+          options: task.options ?? undefined,
+          correctAnswer: task.correctAnswer,
+          explanation: task.explanation,
+          difficulty: task.difficulty,
+          maxScore: task.maxScore ?? 1,
+        };
+        const created = await prisma.task.upsert({
+          where: { topicId_slug: { topicId: dbTopic.id, slug } },
+          update: data,
+          create: { ...data, slug },
         });
         createdTasks.push(created);
       }
+      // Tasks removed from the seed data (index beyond what's left) become
+      // orphaned rather than deleted, for the same Attempt-safety reason.
 
       const firstAutoGraded = createdTasks.find(
         (t) => t.type !== "ESSAY" && t.type !== "DETAILED_ANSWER"

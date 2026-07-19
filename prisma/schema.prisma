@@ -148,6 +148,13 @@ model Task {
   id             String   @id @default(cuid())
   subjectId      String
   topicId        String
+  // Stable per-topic identity (its position in the seed data), NOT shown to
+  // users. Lets re-seeding upsert tasks in place instead of delete+recreate,
+  // which would otherwise cascade-delete every user's Attempt history for
+  // that topic on every deploy. Nullable + backfilled by the seed script
+  // (see prisma/seed.ts) rather than a required column, so this migration
+  // can't fail `prisma db push` against a database that already has rows.
+  slug           String?
   number         Int
   type           TaskType
   statement      String   @db.Text
@@ -164,6 +171,8 @@ model Task {
   topic    Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
   attempts Attempt[]
   mockTasks MockExamTask[]
+
+  @@unique([topicId, slug])
 
   @@index([subjectId, topicId])
   @@map("tasks")
