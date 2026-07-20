@@ -19,8 +19,10 @@ import { CHART } from "@/lib/chart-colors";
 
 const tooltipStyle = {
   borderRadius: 14,
-  border: "1px solid rgba(11,11,18,0.08)",
+  background: "var(--color-surface)",
+  border: "1px solid var(--color-chart-grid)",
   boxShadow: "0 8px 24px rgba(11,11,18,0.08)",
+  color: "var(--color-ink)",
   fontSize: 13,
   padding: "8px 12px",
 };
@@ -44,7 +46,7 @@ export function AccuracyBySubjectChart({ data }: { data: { name: string; accurac
         <Tooltip
           contentStyle={tooltipStyle}
           formatter={(value) => [`${value}%`, "Точность"]}
-          cursor={{ fill: "rgba(11,11,18,0.03)" }}
+          cursor={{ fill: "var(--color-chart-grid)" }}
         />
         <Bar dataKey="accuracy" fill={CHART.blue} radius={[8, 8, 0, 0]} maxBarSize={56} />
       </BarChart>
@@ -74,7 +76,7 @@ export function TopErrorTopicsChart({ data }: { data: { name: string; count: num
         <Tooltip
           contentStyle={tooltipStyle}
           formatter={(value) => [value, "Ошибок"]}
-          cursor={{ fill: "rgba(11,11,18,0.03)" }}
+          cursor={{ fill: "var(--color-chart-grid)" }}
         />
         <Bar dataKey="count" fill={CHART.status.critical} radius={[0, 8, 8, 0]} maxBarSize={22} />
       </BarChart>

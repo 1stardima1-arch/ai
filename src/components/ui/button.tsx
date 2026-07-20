@@ -8,10 +8,10 @@ type Size = "sm" | "md" | "lg";
 const variantClasses: Record<Variant, string> = {
   primary: "btn-gradient",
   secondary:
-    "bg-(--color-ink) text-white hover:bg-black shadow-(--shadow-soft)",
-  ghost: "bg-transparent hover:bg-black/5 text-(--color-ink)",
+    "bg-(--color-ink) text-(--color-paper) hover:opacity-90 shadow-(--shadow-soft)",
+  ghost: "bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-(--color-ink)",
   outline:
-    "bg-white border border-black/10 hover:border-black/20 text-(--color-ink) shadow-(--shadow-soft)",
+    "bg-(--color-surface) border border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 text-(--color-ink) shadow-(--shadow-soft)",
 };
 
 const sizeClasses: Record<Size, string> = {

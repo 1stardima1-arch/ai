@@ -76,7 +76,7 @@ export default async function TopicPage({
               >
                 {status === true && <CheckCircle2 className="h-5 w-5 shrink-0 text-(--color-brand-green)" />}
                 {status === false && <XCircle className="h-5 w-5 shrink-0 text-(--color-brand-pink)" />}
-                {status === undefined && <Circle className="h-5 w-5 shrink-0 text-black/15" />}
+                {status === undefined && <Circle className="h-5 w-5 shrink-0 text-(--color-ink-soft)/40" />}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold">
                     Задание {task.number} · вариант {i + 1}

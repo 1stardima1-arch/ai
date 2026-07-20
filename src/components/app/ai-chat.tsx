@@ -97,7 +97,7 @@ export function AiChat({
     >
       {siri ? (
         <div className="relative z-10 flex items-center gap-3 border-b border-white/10 px-5 py-4">
-          <span className="siri-orb h-9 w-9" />
+          <span className={cn("siri-orb h-9 w-9", thinking && "is-thinking")} />
           <div>
             <div className="text-sm font-bold text-white">Тьютор Макс</div>
             <div className="text-xs text-white/50">твой ИИ-репетитор</div>
@@ -147,7 +147,7 @@ export function AiChat({
                       "rounded-full px-3 py-1.5 text-xs font-semibold",
                       siri
                         ? "siri-chip"
-                        : "border border-black/10 bg-white hover:border-(--color-brand-blue)"
+                        : "border border-black/10 dark:border-white/10 bg-(--color-surface) hover:border-(--color-brand-blue)"
                     )}
                   >
                     {s}
@@ -171,7 +171,14 @@ export function AiChat({
               )}
             >
               {siri ? (
-                m.role === "assistant" && <span className="siri-orb mt-1 h-6 w-6 shrink-0" />
+                m.role === "assistant" && (
+                  <span
+                    className={cn(
+                      "siri-orb mt-1 h-6 w-6 shrink-0",
+                      thinking && i === messages.length - 1 && "is-thinking"
+                    )}
+                  />
+                )
               ) : (
                 <span
                   className={cn(

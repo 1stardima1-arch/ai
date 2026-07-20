@@ -35,8 +35,9 @@ model User {
   attempts      Attempt[]
   mockAttempts  MockExamAttempt[]
   achievements  UserAchievement[]
-  chatMessages  AiMessage[]
-  enrollments   UserSubject[]
+  chatMessages     AiMessage[]
+  enrollments      UserSubject[]
+  supportMessages  SupportMessage[]
 
   @@index([xp])
   @@map("users")
@@ -282,4 +283,20 @@ model AiMessage {
 
   @@index([userId, createdAt])
   @@map("ai_messages")
+}
+
+// One thread per student (userId) — messages from the student and from
+// admin replies interleaved, distinguished by fromAdmin.
+model SupportMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  fromAdmin Boolean  @default(false)
+  body      String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("support_messages")
 }

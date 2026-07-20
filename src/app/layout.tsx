@@ -53,6 +53,15 @@ export default function RootLayout({
       className={`${manrope.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-(--color-paper) text-(--color-ink)">
+        {/* Runs before first paint so the page never flashes light-then-dark
+            (or vice versa) — the alternative, applying the class from a
+            client component after hydration, would always show a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('ball-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}",
+          }}
+        />
         <SwRegister />
         {children}
       </body>

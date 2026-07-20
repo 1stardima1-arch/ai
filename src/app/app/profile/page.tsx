@@ -1,20 +1,25 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
 import { ProfileEditor } from "@/components/app/profile-editor";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 import { NAME_CHANGE_COOLDOWN_DAYS } from "@/lib/avatars";
-import { Flame, Star, Lock } from "lucide-react";
+import { isAdminEmail } from "@/lib/admin";
+import { Flame, Star, Lock, Moon, LifeBuoy, ChevronRight, ShieldCheck } from "lucide-react";
 
 export default async function ProfilePage() {
   const session = await auth();
   const userId = session!.user.id;
+  const admin = isAdminEmail(session?.user?.email);
 
-  const [user, achievements, unlocked, totalAttempts] = await Promise.all([
+  const [user, achievements, unlocked, totalAttempts, adminUnread] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId } }),
     prisma.achievement.findMany(),
     prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } }),
     prisma.attempt.count({ where: { userId } }),
+    admin ? prisma.supportMessage.count({ where: { fromAdmin: false, read: false } }) : Promise.resolve(0),
   ]);
 
   const unlockedIds = new Set(unlocked.map((u) => u.achievementId));
@@ -79,6 +84,63 @@ export default async function ProfilePage() {
         <AnimatedBar percent={progress.percent} className="btn-gradient" trackClassName="mt-2 h-2.5" />
       </div>
 
+      <h2 className="mt-8 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">Настройки</h2>
+      <div className="mt-3 space-y-2.5">
+        <div className="card-surface flex items-center justify-between gap-3 p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-sky-2) text-(--color-brand-blue)">
+              <Moon className="h-4.5 w-4.5" />
+            </span>
+            <div>
+              <div className="text-sm font-bold">Тёмная тема</div>
+              <div className="text-xs text-(--color-ink-soft)">Переключается сразу, запоминается на этом устройстве</div>
+            </div>
+          </div>
+          <ThemeToggle />
+        </div>
+
+        <Link
+          href="/app/support"
+          className="card-surface press-spring flex items-center justify-between gap-3 p-4"
+        >
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-(--color-brand-green)">
+              <LifeBuoy className="h-4.5 w-4.5" />
+            </span>
+            <div>
+              <div className="text-sm font-bold">Поддержка</div>
+              <div className="text-xs text-(--color-ink-soft)">Вопрос, идея или что-то не работает — напиши нам</div>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-(--color-ink-soft)" />
+        </Link>
+
+        {admin && (
+          <Link
+            href="/app/admin/support"
+            className="card-surface press-spring flex items-center justify-between gap-3 p-4"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-sky-2) text-(--color-brand-violet)">
+                <ShieldCheck className="h-4.5 w-4.5" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  Сообщения студентов
+                  {adminUnread > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-(--color-brand-pink) px-1.5 text-[0.65rem] font-bold text-white">
+                      {adminUnread}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-(--color-ink-soft)">Админ-режим — видно только тебе</div>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-(--color-ink-soft)" />
+          </Link>
+        )}
+      </div>
+
       <h2 className="mt-8 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">Достижения</h2>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {achievements.map((a) => {
@@ -90,7 +152,7 @@ export default async function ProfilePage() {
                 isUnlocked ? "" : "opacity-50"
               }`}
             >
-              <div className="text-3xl">{isUnlocked ? a.icon : <Lock className="h-7 w-7 text-black/30" />}</div>
+              <div className="text-3xl">{isUnlocked ? a.icon : <Lock className="h-7 w-7 text-(--color-ink-soft)" />}</div>
               <div className="text-sm font-bold">{a.title}</div>
               <div className="text-xs text-(--color-ink-soft)">{a.description}</div>
             </div>

@@ -33,7 +33,7 @@ export function LoginActions({
             <button
               type="submit"
               disabled={!consent}
-              className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-semibold shadow-(--shadow-soft) disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-3 text-sm font-semibold shadow-(--shadow-soft) disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Mail className="h-4 w-4" />
               Войти по почте

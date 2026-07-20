@@ -88,7 +88,7 @@ export function ProfileEditor({
           onChange={(e) => setName(e.target.value)}
           disabled={nameLocked}
           maxLength={24}
-          className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-(--color-brand-blue) disabled:opacity-60"
+          className="mt-1.5 w-full rounded-2xl border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-(--color-brand-blue) disabled:opacity-60"
         />
         <p className="mt-1.5 text-xs text-(--color-ink-soft)">
           {nameLocked

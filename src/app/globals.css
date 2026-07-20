@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Manual (not just OS-preference) dark mode: toggling the `.dark` class on
+   <html> is what flips `dark:` utilities, driven by ThemeToggle + a
+   pre-hydration inline script (see layout.tsx) that reads localStorage
+   before first paint so there's no flash of the wrong theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-display: var(--font-unbounded);
   --font-sans: var(--font-manrope);
@@ -20,6 +26,10 @@
   --color-sky-2: #eef2ff;
   --color-grass-1: #dff3df;
   --color-grass-2: #c3ecc6;
+
+  /* Recharts grid lines only — not used by any Tailwind utility, referenced
+     directly as a color string from src/lib/chart-colors.ts. */
+  --color-chart-grid: #e8e6e0;
 
   --radius-xs: 10px;
   --radius-sm: 16px;
@@ -53,9 +63,26 @@ body {
   overscroll-behavior-y: none;
 }
 
-.dark body {
-  --background: #0a0a10;
-  --foreground: #f4f3f0;
+/* @theme inline registers these as plain CSS custom properties on :root,
+   so redefining them here under .dark cascades into every utility that
+   reads them (bg-(--color-paper), text-(--color-ink-soft), ...) without
+   needing a dark: variant on each usage site individually. */
+:root.dark {
+  --color-ink: #f2f1f7;
+  --color-ink-soft: #9c9aab;
+  --color-paper: #0a0a10;
+  --color-paper-dim: #16151f;
+  --color-surface: #17161f;
+
+  --color-sky-1: #1c2340;
+  --color-sky-2: #191c33;
+  --color-grass-1: #163524;
+  --color-grass-2: #1d4430;
+  --color-chart-grid: rgba(255, 255, 255, 0.08);
+
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.35), 0 24px 64px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 0 1px rgba(79, 107, 255, 0.16), 0 16px 40px rgba(79, 107, 255, 0.28);
 }
 
 .font-display {
@@ -109,6 +136,15 @@ body {
 .card-surface:hover {
   transform: translateY(-2px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--shadow-lift);
+}
+
+.dark .card-surface {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--shadow-soft);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.dark .card-surface:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), var(--shadow-lift);
 }
 
 .dreamy-hero-bg {
@@ -197,6 +233,13 @@ body {
   background: linear-gradient(180deg, var(--color-grass-1), var(--color-grass-2));
 }
 
+.dark .dreamy-hero-bg {
+  background:
+    radial-gradient(60% 45% at 20% 8%, rgba(79, 107, 255, 0.16) 0%, transparent 60%),
+    radial-gradient(50% 40% at 85% 5%, rgba(236, 72, 153, 0.13) 0%, transparent 60%),
+    linear-gradient(180deg, #0e0e18 0%, #0c0c16 38%, #0a0e12 72%, #0a120e 100%);
+}
+
 .noise-overlay {
   position: absolute;
   inset: 0;
@@ -231,6 +274,16 @@ body {
     inset 0 -1px 0 rgba(255, 255, 255, 0.15),
     0 2px 8px rgba(11, 11, 18, 0.05),
     0 16px 40px rgba(11, 11, 18, 0.09);
+}
+
+.dark .liquid-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.25),
+    0 16px 40px rgba(0, 0, 0, 0.3);
 }
 
 /* passing specular reflection — the "mirror" sheen of liquid glass.
@@ -415,8 +468,8 @@ body {
     #7dffb2,
     #ff8a5c
   );
-  animation: siri-orb-spin 7s linear infinite;
-  will-change: transform;
+  animation: siri-orb-spin 7s linear infinite, siri-orb-breathe 3.2s ease-in-out infinite;
+  will-change: transform, filter;
 }
 .siri-orb::after {
   content: "";
@@ -427,8 +480,24 @@ body {
   filter: blur(1px);
 }
 
+/* while the AI is actually generating a reply: faster spin + a visible
+   pulsing glow, so the orb reads as "working" rather than just decorative */
+.siri-orb.is-thinking {
+  animation: siri-orb-spin 2.2s linear infinite, siri-orb-pulse 1.1s ease-in-out infinite;
+}
+
 @keyframes siri-orb-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes siri-orb-breathe {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(176, 107, 255, 0)); }
+  50% { filter: drop-shadow(0 0 10px rgba(176, 107, 255, 0.55)); }
+}
+
+@keyframes siri-orb-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(176, 107, 255, 0.5)) brightness(1); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 16px rgba(176, 107, 255, 0.85)) brightness(1.12); transform: scale(1.06); }
 }
 
 .siri-bubble-user {
@@ -493,6 +562,7 @@ body {
   .press-spring { transition: none; }
   .siri-panel::before { animation: none; }
   .siri-orb { animation: none; }
+  .siri-orb.is-thinking { animation: none; }
   .siri-thinking span { animation: none; }
 }
 
