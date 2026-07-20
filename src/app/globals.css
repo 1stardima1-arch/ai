@@ -214,7 +214,14 @@ body {
 }
 
 .liquid-glass {
-  position: relative;
+  /* No forced `position` here on purpose: this file's custom classes sit
+     outside Tailwind's cascade layers, so an unconditional `relative` here
+     would always beat a `fixed`/`sticky` utility class on the same element
+     (unlayered CSS wins over @layer'd utilities regardless of source
+     order) — that silently broke the fixed mobile nav and the sticky
+     sidebar. Every current usage already sets its own position utility
+     (fixed/sticky), which is enough of a positioning context for
+     .glass-sheen's ::after pseudo-element too. */
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.48));
   -webkit-backdrop-filter: blur(12px) saturate(1.5);
   backdrop-filter: blur(12px) saturate(1.5);

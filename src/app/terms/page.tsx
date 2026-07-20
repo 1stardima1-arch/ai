@@ -38,7 +38,7 @@ export default function TermsPage() {
             <section>
               <h2 className="font-display text-lg font-bold text-(--color-ink)">2. Регистрация и аккаунт</h2>
               <p className="mt-2">
-                Доступ к Сервису предоставляется после входа через Google, VK ID или демо-режим.
+                Доступ к Сервису предоставляется после входа по почте или через демо-режим.
                 Пользователь несёт ответственность за сохранность доступа к своему аккаунту.
               </p>
             </section>

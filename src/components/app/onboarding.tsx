@@ -18,7 +18,8 @@ export type OnboardingSubject = {
   icon: string;
 };
 
-// How We Feel-inspired welcome slides…
+// How We Feel-inspired welcome slides — a short feature tour, not just a
+// generic hello, so it's clear what the app actually does before setup.
 const SLIDES = [
   {
     color: "#4f6bff",
@@ -28,15 +29,21 @@ const SLIDES = [
   },
   {
     color: "#8b5cf6",
-    emoji: "📚",
-    title: "Реальные задания",
-    text: "Формат ФИПИ и простая теория, которую реально понять.",
+    emoji: "📅",
+    title: "Новый день — новые задания",
+    text: "Каждый день свежий набор заданий и теория именно под них — по формату ФИПИ.",
   },
   {
     color: "#22c55e",
     emoji: "✨",
     title: "ИИ всегда рядом",
-    text: "Тьютор Макс объяснит тему и разберёт любую твою ошибку.",
+    text: "Тьютор Макс объяснит тему и разберёт любую твою ошибку — под твой уровень.",
+  },
+  {
+    color: "#ec4899",
+    emoji: "🔥",
+    title: "Прогресс и рейтинг",
+    text: "Серии дней подряд, опыт за каждое задание и место в общем рейтинге.",
   },
 ];
 

@@ -5,7 +5,7 @@
 пробные экзамены и геймификация (стрики, XP, достижения).
 
 **Стек:** Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Prisma + PostgreSQL ·
-Auth.js v5 (Google + Яндекс + VK) · Groq (бесплатный быстрый ИИ) · Recharts · Framer Motion.
+Auth.js v5 (вход по почте) · Groq (бесплатный быстрый ИИ) · Recharts · Framer Motion.
 
 ---
 
@@ -30,14 +30,8 @@ DATABASE_URL="postgresql://user:password@localhost:5432/examapp"
 AUTH_SECRET="сгенерируй: openssl rand -base64 33"
 NEXTAUTH_URL="http://localhost:3000"
 
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-
-YANDEX_CLIENT_ID=""
-YANDEX_CLIENT_SECRET=""
-
-VK_CLIENT_ID=""
-VK_CLIENT_SECRET=""
+RESEND_API_KEY=""
+RESEND_FROM_EMAIL="Балл <onboarding@resend.dev>"
 
 GROQ_API_KEY=""
 
@@ -57,7 +51,7 @@ npm run db:seed
 npm run dev
 ```
 
-Открой [http://localhost:3000](http://localhost:3000). Пока не настроены Google/VK,
+Открой [http://localhost:3000](http://localhost:3000). Пока не настроена почта,
 можно войти через **демо-вход** (просто имя, без пароля) — так работает весь функционал:
 прогресс, аналитика, разбор ошибок, пробные экзамены. ИИ-репетитор ответит настоящим ИИ,
 как только добавишь `GROQ_API_KEY` (см. ниже — это бесплатно и займёт 2 минуты).
@@ -101,81 +95,31 @@ Groq — облачный сервис инференса, который отв
 
 ---
 
-## 4. Авторизация через Google
+## 4. Вход и верификация по почте (Resend)
 
-1. Открой **[console.cloud.google.com](https://console.cloud.google.com/)** → создай новый проект (или выбери существующий).
-2. **APIs & Services → OAuth consent screen**:
-   - User type: **External**.
-   - Заполни название приложения, email — сохрани.
-   - На шаге Scopes ничего добавлять не нужно (достаточно базовых `email`, `profile`).
-   - Добавь себя в Test users, пока приложение не прошло верификацию Google (иначе входить смогут только тестовые аккаунты).
-3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
-   - Application type: **Web application**.
-   - Authorized redirect URIs — добавь:
-     - для локальной разработки: `http://localhost:3000/api/auth/callback/google`
-     - для продакшена: `https://твой-домен.ru/api/auth/callback/google`
-4. Скопируй **Client ID** и **Client Secret** в `.env`:
-   ```
-   GOOGLE_CLIENT_ID="..."
-   GOOGLE_CLIENT_SECRET="..."
-   ```
-5. Перезапусти сервер — на `/login` появится рабочая кнопка «Продолжить с Google».
+Вход по email работает как magic-link: студент вводит почту, получает письмо
+со ссылкой, переходит по ней — это одновременно и вход, и подтверждение
+почты (без паролей и отдельного шага верификации). За отправку писем отвечает
+[Resend](https://resend.com) — бесплатный тариф (100 писем/день) не требует
+своего домена, можно отправлять с `onboarding@resend.dev` сразу после регистрации.
 
-> Пока приложение не прошло верификацию Google (для этого понадобится политика
-> конфиденциальности и т.д.), входить смогут только email-адреса, добавленные
-> в Test users на шаге 2. Для реального запуска на пользователей — подай заявку
-> на верификацию в том же разделе OAuth consent screen.
+1. Зарегистрируйся на **[resend.com](https://resend.com)**.
+2. **API Keys → Create API Key** — скопируй ключ.
+3. Добавь в `.env`:
+   ```
+   RESEND_API_KEY="re_..."
+   RESEND_FROM_EMAIL="Балл <onboarding@resend.dev>"
+   ```
+4. Перезапусти сервер — на `/login` появится поле «Войти по почте».
+
+> Со своим доменом (например `noreply@твой-домен.ru`) письма выглядят солиднее
+> и реже попадают в спам — домен подтверждается в Resend за пару минут (Domains →
+> Add Domain, добавить DNS-записи). Пока домен не подтверждён, используй
+> `onboarding@resend.dev` — он уже работает.
 
 ---
 
-## 5. Авторизация через Яндекс ID
-
-1. Открой **[oauth.yandex.ru](https://oauth.yandex.ru/)** и войди в свой Яндекс-аккаунт.
-2. **Создать приложение**:
-   - Платформы: отметь **Веб-сервисы**.
-   - Redirect URI — добавь:
-     - для локальной разработки: `http://localhost:3000/api/auth/callback/yandex`
-     - для продакшена: `https://твой-домен.ru/api/auth/callback/yandex`
-   - В доступах (Scopes) отметь: `Доступ к email`, `Доступ к портрету`, `Доступ к логину, имени и фамилии`.
-3. Скопируй **ClientID** и **Client Secret** в `.env`:
-   ```
-   YANDEX_CLIENT_ID="..."
-   YANDEX_CLIENT_SECRET="..."
-   ```
-4. Перезапусти сервер — на `/login` появится кнопка «Продолжить с Яндекс ID».
-
----
-
-## 6. Авторизация через VK (VK ID)
-
-VK в 2024–2025 годах перевёл вход через VK на новый протокол **VK ID**
-(OAuth 2.1 + PKCE) — именно под него написан провайдер в этом проекте
-(`src/lib/vk-provider.ts`).
-
-1. Зайди на **[id.vk.com/business/go](https://id.vk.com/business/go)** и войди через VK.
-2. Создай приложение (**Создать приложение → Веб-сайт**).
-3. В настройках приложения:
-   - Укажи домен сайта (для локальной разработки можно `localhost`).
-   - Добавь **Redirect URL**:
-     - `http://localhost:3000/api/auth/callback/vk` (разработка)
-     - `https://твой-домен.ru/api/auth/callback/vk` (продакшен)
-   - Включи скоуп **email**, если хочешь получать email пользователя.
-4. Скопируй **Client ID** (`app id`) и **Secure key / Client Secret** в `.env`:
-   ```
-   VK_CLIENT_ID="..."
-   VK_CLIENT_SECRET="..."
-   ```
-5. Перезапусти сервер — на `/login` появится кнопка «Продолжить с VK».
-
-> ⚠️ VK периодически меняет детали VK ID API. Если вход через VK перестанет
-> работать, в первую очередь проверь актуальные названия полей/эндпоинтов в
-> [документации VK ID](https://id.vk.com/business/go/docs/vkid/latest/methods-reference/auth/auth-oauth2)
-> и сверь с `src/lib/vk-provider.ts` — вся логика обмена кода на токен и
-> получения профиля собрана в одном файле.
-
----
-
-## 7. Деплой в продакшен
+## 5. Деплой в продакшен
 
 Проще всего — **[Vercel](https://vercel.com)**:
 
@@ -184,14 +128,13 @@ VK в 2024–2025 годах перевёл вход через VK на новы
 3. Добавь все переменные окружения из `.env` в Vercel → Project Settings → Environment Variables
    (используй продакшен `DATABASE_URL`, реальный `NEXTAUTH_URL` = адрес продакшена,
    `ENABLE_DEMO_LOGIN="false"`).
-4. Не забудь добавить продакшен-домен в **Redirect URIs** у Google, Яндекс и VK (см. разделы выше).
-5. После первого деплоя один раз выполни `npm run db:push && npm run db:seed`
+4. После первого деплоя один раз выполни `npm run db:push && npm run db:seed`
    локально, указав в `DATABASE_URL` продакшен-базу (или настрой это как
    отдельный шаг в CI).
 
 ---
 
-## 8. Android-приложение (APK) через GitHub Actions
+## 6. Android-приложение (APK) через GitHub Actions
 
 Сайт можно обернуть в реальное Android-приложение — это называется **Trusted Web
 Activity (TWA)**: системный WebView открывает тот же сайт, но выглядит и ставится как
@@ -247,15 +190,15 @@ Activity (TWA)**: системный WebView открывает тот же са
 
 ---
 
-## 9. Структура проекта
+## 7. Структура проекта
 
 ```
 prisma/schema.prisma        — модели БД (пользователи, предметы, задания, попытки, ...)
 prisma/seed-data.ts         — контент: темы, теория, задания (ЕГЭ/ОГЭ математика и русский)
 prisma/seed.ts              — загрузчик seed-данных в БД
 
-src/auth.ts                 — конфигурация Auth.js (Google, VK, демо-вход)
-src/lib/vk-provider.ts      — кастомный провайдер VK ID для Auth.js
+src/auth.ts                 — конфигурация Auth.js (почта через Resend, демо-вход)
+src/lib/verification-email.ts — HTML-шаблон письма со ссылкой для входа
 src/lib/ai.ts                — обёртка над Groq (ИИ-репетитор)
 src/lib/grading.ts          — проверка ответов
 src/lib/gamification.ts     — XP, уровни, стрики
@@ -268,7 +211,7 @@ src/app/app/*                — основное приложение (дашб
 src/app/api/ai/chat         — стриминговый эндпоинт ИИ-репетитора
 ```
 
-## 10. Как добавить больше предметов и заданий
+## 8. Как добавить больше предметов и заданий
 
 Задания хранятся структурированно в `prisma/seed-data.ts` — добавь новый объект
 `SubjectSeed` (предмет → темы → задания) по образцу уже существующих и запусти
@@ -276,7 +219,7 @@ src/app/api/ai/chat         — стриминговый эндпоинт ИИ-�
 правильный ответ, объяснение) сделан максимально близким к реальному открытому
 банку ФИПИ, чтобы туда было легко добавлять настоящие задания вручную.
 
-## 11. Полезные команды
+## 9. Полезные команды
 
 ```bash
 npm run dev        # разработка

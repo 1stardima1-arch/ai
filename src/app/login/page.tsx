@@ -5,33 +5,28 @@ import { LoginActions } from "@/components/app/login-actions";
 import { PageTransition } from "@/components/motion/page-transition";
 
 const providers = {
-  google: !!process.env.GOOGLE_CLIENT_ID,
-  yandex: !!process.env.YANDEX_CLIENT_ID,
-  vk: !!process.env.VK_CLIENT_ID,
+  email: !!process.env.RESEND_API_KEY,
   demo: process.env.ENABLE_DEMO_LOGIN === "true",
+};
+
+const errorMessages: Record<string, string> = {
+  Verification: "Ссылка для входа устарела или уже использована. Запроси новую.",
+  Default: "Не получилось войти. Попробуй ещё раз.",
 };
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, error } = await searchParams;
   const redirectTo = callbackUrl || "/app";
+  const errorMessage = error ? errorMessages[error] || errorMessages.Default : null;
 
-  async function googleSignIn() {
+  async function emailSignIn(formData: FormData) {
     "use server";
-    await signIn("google", { redirectTo });
-  }
-
-  async function yandexSignIn() {
-    "use server";
-    await signIn("yandex", { redirectTo });
-  }
-
-  async function vkSignIn() {
-    "use server";
-    await signIn("vk", { redirectTo });
+    const email = (formData.get("email") as string)?.trim();
+    await signIn("resend", { email, redirectTo });
   }
 
   async function demoSignIn(formData: FormData) {
@@ -67,14 +62,16 @@ export default async function LoginPage({
             Войди, чтобы сохранять прогресс и получать разбор ошибок от ИИ
           </p>
 
+          {errorMessage && (
+            <div className="mt-5 rounded-2xl bg-(--color-brand-pink)/10 px-4 py-3 text-center text-sm font-semibold text-(--color-brand-pink)">
+              {errorMessage}
+            </div>
+          )}
+
           <LoginActions
-            hasGoogle={providers.google}
-            hasYandex={providers.yandex}
-            hasVk={providers.vk}
+            hasEmail={providers.email}
             hasDemo={providers.demo}
-            googleAction={googleSignIn}
-            yandexAction={yandexSignIn}
-            vkAction={vkSignIn}
+            emailAction={emailSignIn}
             demoAction={demoSignIn}
           />
         </div>

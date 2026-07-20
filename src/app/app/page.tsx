@@ -105,7 +105,7 @@ export default async function DashboardPage() {
               Новый набор каждый день
             </span>
           </div>
-          <div className="grid gap-2.5 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             {daily.tasks.map((t) => (
               <Link
                 key={t.id}
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
               Под сегодняшние задания
             </span>
           </div>
-          <div className="grid gap-2.5 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             {daily.topics.map((t) => (
               <Link
                 key={t.id}

@@ -1,37 +1,40 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
-import Yandex from "next-auth/providers/yandex";
+import Resend from "next-auth/providers/resend";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import VKId from "@/lib/vk-provider";
+import { verificationEmailHtml, verificationEmailText } from "@/lib/verification-email";
 
 const providers: NextAuthConfig["providers"] = [];
 
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+// Passwordless email login: entering an email and clicking the link that
+// arrives is both "sign in by email" and "email verification" in one step —
+// no password to store/reset, no separate verified-email flag to track.
+if (process.env.RESEND_API_KEY) {
   providers.push(
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    })
-  );
-}
-
-if (process.env.YANDEX_CLIENT_ID && process.env.YANDEX_CLIENT_SECRET) {
-  providers.push(
-    Yandex({
-      clientId: process.env.YANDEX_CLIENT_ID,
-      clientSecret: process.env.YANDEX_CLIENT_SECRET,
-    })
-  );
-}
-
-if (process.env.VK_CLIENT_ID && process.env.VK_CLIENT_SECRET) {
-  providers.push(
-    VKId({
-      clientId: process.env.VK_CLIENT_ID,
-      clientSecret: process.env.VK_CLIENT_SECRET,
+    Resend({
+      apiKey: process.env.RESEND_API_KEY,
+      from: process.env.RESEND_FROM_EMAIL || "Балл <onboarding@resend.dev>",
+      async sendVerificationRequest({ identifier: to, url, provider }) {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${provider.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: provider.from,
+            to,
+            subject: "Вход в Балл",
+            html: verificationEmailHtml(url),
+            text: verificationEmailText(url),
+          }),
+        });
+        if (!res.ok) {
+          throw new Error("Resend error: " + JSON.stringify(await res.json()));
+        }
+      },
     })
   );
 }
@@ -65,6 +68,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
+    verifyRequest: "/login/check-email",
+    error: "/login",
   },
   providers,
   callbacks: {
