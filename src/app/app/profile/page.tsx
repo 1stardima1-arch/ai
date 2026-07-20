@@ -6,20 +6,22 @@ import { AnimatedBar } from "@/components/motion/animated-bar";
 import { ProfileEditor } from "@/components/app/profile-editor";
 import { ThemeToggle } from "@/components/app/theme-toggle";
 import { NAME_CHANGE_COOLDOWN_DAYS } from "@/lib/avatars";
-import { isAdminEmail } from "@/lib/admin";
-import { Flame, Star, Lock, Moon, LifeBuoy, ChevronRight, ShieldCheck } from "lucide-react";
+import { isAdminSession } from "@/lib/admin";
+import { WebAuthnEnroll } from "@/components/app/webauthn-enroll";
+import { Flame, Star, Lock, Moon, LifeBuoy, ChevronRight, ShieldCheck, Fingerprint } from "lucide-react";
 
 export default async function ProfilePage() {
   const session = await auth();
   const userId = session!.user.id;
-  const admin = isAdminEmail(session?.user?.email);
+  const admin = isAdminSession(session);
 
-  const [user, achievements, unlocked, totalAttempts, adminUnread] = await Promise.all([
+  const [user, achievements, unlocked, totalAttempts, adminUnread, authenticators] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId } }),
     prisma.achievement.findMany(),
     prisma.userAchievement.findMany({ where: { userId }, select: { achievementId: true } }),
     prisma.attempt.count({ where: { userId } }),
     admin ? prisma.supportMessage.count({ where: { fromAdmin: false, read: false } }) : Promise.resolve(0),
+    prisma.authenticator.findMany({ where: { userId }, select: { id: true, createdAt: true }, orderBy: { createdAt: "desc" } }),
   ]);
 
   const unlockedIds = new Set(unlocked.map((u) => u.achievementId));
@@ -97,6 +99,23 @@ export default async function ProfilePage() {
             </div>
           </div>
           <ThemeToggle />
+        </div>
+
+        <div className="card-surface p-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-sky-2) text-(--color-brand-blue)">
+              <Fingerprint className="h-4.5 w-4.5" />
+            </span>
+            <div>
+              <div className="text-sm font-bold">Вход по отпечатку</div>
+              <div className="text-xs text-(--color-ink-soft)">Быстрый вход без пароля на этом устройстве</div>
+            </div>
+          </div>
+          <div className="mt-3.5 pl-[3.25rem]">
+            <WebAuthnEnroll
+              devices={authenticators.map((a) => ({ id: a.id, createdAt: a.createdAt.toISOString() }))}
+            />
+          </div>
         </div>
 
         <Link

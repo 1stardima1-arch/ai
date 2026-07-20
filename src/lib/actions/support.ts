@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminSession } from "@/lib/admin";
 
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "bal.support.exam@gmail.com";
 
@@ -67,7 +67,7 @@ export async function sendSupportMessage(formData: FormData): Promise<SupportRes
 // Admin replies into a specific student's thread.
 export async function sendAdminReply(formData: FormData): Promise<SupportResult> {
   const session = await auth();
-  if (!isAdminEmail(session?.user?.email)) return { ok: false, error: "Нет доступа." };
+  if (!isAdminSession(session)) return { ok: false, error: "Нет доступа." };
 
   const targetUserId = (formData.get("userId") as string | null) ?? "";
   const body = (formData.get("message") as string | null)?.trim() ?? "";
@@ -112,7 +112,7 @@ export async function markThreadRead() {
 // stop showing as unread in the admin thread list.
 export async function markAdminViewRead(userId: string) {
   const session = await auth();
-  if (!isAdminEmail(session?.user?.email)) return;
+  if (!isAdminSession(session)) return;
   await prisma.supportMessage.updateMany({
     where: { userId, fromAdmin: false, read: false },
     data: { read: true },

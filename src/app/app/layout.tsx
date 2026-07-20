@@ -10,7 +10,7 @@ import { AppSplash } from "@/components/app/app-splash";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
-import { Sparkles, Flame } from "lucide-react";
+import { Sparkles, Flame, LifeBuoy } from "lucide-react";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -81,6 +81,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <Flame className="h-4 w-4 text-(--color-brand-amber)" />
               {user.streak}
             </div>
+            <Link
+              href="/app/support"
+              className="liquid-glass press-spring flex h-9 w-9 items-center justify-center rounded-full"
+              title="Поддержка"
+            >
+              <LifeBuoy className="h-4 w-4 text-(--color-ink-soft)" />
+            </Link>
             <Link href="/app/profile" className="liquid-glass press-spring flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3">
               <UserAvatar
                 avatarKey={user.avatarKey}

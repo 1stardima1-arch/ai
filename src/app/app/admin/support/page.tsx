@@ -2,13 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminSession } from "@/lib/admin";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { MessageCircle } from "lucide-react";
 
 export default async function AdminSupportListPage() {
   const session = await auth();
-  if (!isAdminEmail(session?.user?.email)) notFound();
+  if (!isAdminSession(session)) notFound();
 
   const messages = await prisma.supportMessage.findMany({
     orderBy: { createdAt: "desc" },

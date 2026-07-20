@@ -17,6 +17,10 @@ model User {
   image         String?
   avatarKey     String?
   nameChangedAt DateTime?
+  // Username + password login, independent of the email-magic-link/OAuth
+  // providers below — a student can have either, both, or neither.
+  username      String?   @unique
+  passwordHash  String?
   // Self-assessed preparation level from onboarding: BEGINNER | INTERMEDIATE | ADVANCED.
   // Drives task difficulty selection and how the AI tutor pitches explanations.
   prepLevel     String?
@@ -38,6 +42,8 @@ model User {
   chatMessages     AiMessage[]
   enrollments      UserSubject[]
   supportMessages  SupportMessage[]
+  authenticators   Authenticator[]
+  passwordResets   PasswordResetToken[]
 
   @@index([xp])
   @@map("users")
@@ -80,6 +86,39 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// A registered fingerprint/Face ID/Windows Hello credential (WebAuthn).
+// credentialID/credentialPublicKey are stored base64url-encoded — Prisma
+// has no raw binary type that round-trips cleanly through Postgres here.
+model Authenticator {
+  id                  String   @id @default(cuid())
+  userId              String
+  credentialID        String   @unique
+  credentialPublicKey String
+  counter             Int
+  transports          String?
+  createdAt           DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("authenticators")
+}
+
+// Short-lived "forgot password" link. One-time use — consumed (deleted) the
+// moment the password is actually reset.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 // ------------------------- Domain -------------------------

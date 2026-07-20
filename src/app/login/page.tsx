@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { signIn } from "@/auth";
 import { Sparkles } from "lucide-react";
-import { LoginActions } from "@/components/app/login-actions";
+import { AuthPanel } from "@/components/app/auth-panel";
 import { PageTransition } from "@/components/motion/page-transition";
 
 const providers = {
@@ -11,6 +11,7 @@ const providers = {
 
 const errorMessages: Record<string, string> = {
   Verification: "Ссылка для входа устарела или уже использована. Запроси новую.",
+  CredentialsSignin: "Неверный ник или пароль.",
   Default: "Не получилось войти. Попробуй ещё раз.",
 };
 
@@ -22,6 +23,13 @@ export default async function LoginPage({
   const { callbackUrl, error } = await searchParams;
   const redirectTo = callbackUrl || "/app";
   const errorMessage = error ? errorMessages[error] || errorMessages.Default : null;
+
+  async function signinAction(formData: FormData) {
+    "use server";
+    const username = (formData.get("username") as string)?.trim();
+    const password = formData.get("password") as string;
+    await signIn("username-password", { username, password, redirectTo });
+  }
 
   async function emailSignIn(formData: FormData) {
     "use server";
@@ -55,22 +63,17 @@ export default async function LoginPage({
         </Link>
 
         <div className="card-surface p-8">
-          <h1 className="font-display text-center text-2xl font-extrabold">
-            С возвращением 👋
-          </h1>
-          <p className="mt-2 text-center text-sm text-(--color-ink-soft)">
-            Войди, чтобы сохранять прогресс и получать разбор ошибок от ИИ
-          </p>
-
           {errorMessage && (
-            <div className="mt-5 rounded-2xl bg-(--color-brand-pink)/10 px-4 py-3 text-center text-sm font-semibold text-(--color-brand-pink)">
+            <div className="mb-5 rounded-2xl bg-(--color-brand-pink)/10 px-4 py-3 text-center text-sm font-semibold text-(--color-brand-pink)">
               {errorMessage}
             </div>
           )}
 
-          <LoginActions
+          <AuthPanel
             hasEmail={providers.email}
             hasDemo={providers.demo}
+            redirectTo={redirectTo}
+            signinAction={signinAction}
             emailAction={emailSignIn}
             demoAction={demoSignIn}
           />

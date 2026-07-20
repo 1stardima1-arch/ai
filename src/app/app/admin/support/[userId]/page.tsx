@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { isAdminEmail } from "@/lib/admin";
+import { isAdminSession } from "@/lib/admin";
 import { sendAdminReply, markAdminViewRead } from "@/lib/actions/support";
 import { SupportChat } from "@/components/app/support-chat";
 import { UserAvatar } from "@/components/app/user-avatar";
@@ -14,7 +14,7 @@ export default async function AdminSupportThreadPage({
   params: Promise<{ userId: string }>;
 }) {
   const session = await auth();
-  if (!isAdminEmail(session?.user?.email)) notFound();
+  if (!isAdminSession(session)) notFound();
   const { userId } = await params;
 
   const student = await prisma.user.findUnique({
