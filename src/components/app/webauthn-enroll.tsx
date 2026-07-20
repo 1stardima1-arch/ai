@@ -5,6 +5,11 @@ import { startRegistration, browserSupportsWebAuthn, platformAuthenticatorIsAvai
 import { Fingerprint, Trash2 } from "lucide-react";
 import { generateWebAuthnRegistrationOptions, verifyWebAuthnRegistration, removeWebAuthnCredential } from "@/lib/actions/webauthn";
 
+// The login page's fingerprint button reads this flag to decide whether to
+// show itself at all — a device that never enrolled here would otherwise
+// trigger a confusing native "no passkeys found" dialog when tapped.
+export const DEVICE_ENROLLED_KEY = "ball-webauthn-device-enrolled";
+
 export function WebAuthnEnroll({
   devices: initialDevices,
 }: {
@@ -31,6 +36,7 @@ export function WebAuthnEnroll({
         const response = await startRegistration(options);
         const result = await verifyWebAuthnRegistration(response);
         if (result.ok) {
+          localStorage.setItem(DEVICE_ENROLLED_KEY, "1");
           setStatus({ kind: "ok", text: "Готово — теперь можно входить по отпечатку." });
           setDevices((prev) => [...prev, { id: `local-${Date.now()}`, createdAt: new Date().toISOString() }]);
         } else {

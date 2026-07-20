@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState, ViewTransition } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 const ENTRY_FLAG = "ball-app-entered";
 
-// Route content is wrapped in React's native <ViewTransition> (browser View
-// Transitions API, enabled via experimental.viewTransition in next.config.ts)
-// so every navigation gets a GPU-composited crossfade instead of a hard cut —
-// this is what actually fixes "переход очень резкий": native transitions are
-// smooth even on slower phones, unlike a JS-driven fade that competes with
-// the rest of the page for the main thread during a route change.
+// Route content crossfades via framer-motion rather than React's native
+// <ViewTransition> (the browser View Transitions API) — that API is still
+// experimental and its GPU-compositing behavior varies a lot across real
+// Android devices/Chrome versions in ways impossible to catch from this
+// sandbox's desktop testing; it showed up as a visible rendering glitch on
+// a real phone. framer-motion is a well-established library with none of
+// that risk, at the cost of a slightly less "native" crossfade.
 // The Siri rainbow edge glow plays only on the first entry into the app this
 // session and whenever the AI assistant tab is opened (it's the "AI moment",
 // not an every-page effect).
@@ -43,7 +44,17 @@ export function PageTransition({ children, glow = "auto" }: { children: ReactNod
           onAnimationComplete={() => setShowGlow(false)}
         />
       )}
-      <ViewTransition default={reduceMotion ? "none" : "auto"}>{children}</ViewTransition>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={pathname}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={reduceMotion ? undefined : { opacity: 0 }}
+          transition={{ duration: 0.18, ease: "easeInOut" }}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </>
   );
 }

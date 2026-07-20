@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { signIn } from "@/auth";
-import { Sparkles } from "lucide-react";
+import { Sparkles, BookOpenCheck, Wand2, TrendingUp } from "lucide-react";
 import { AuthPanel } from "@/components/app/auth-panel";
 import { PageTransition } from "@/components/motion/page-transition";
+
+const PITCH = [
+  { icon: BookOpenCheck, text: "Теория и задания ФИПИ по ЕГЭ и ОГЭ" },
+  { icon: Wand2, text: "ИИ-репетитор разбирает твои ошибки" },
+  { icon: TrendingUp, text: "Прогресс, серии дней и рейтинг" },
+];
 
 const providers = {
   email: !!process.env.RESEND_API_KEY,
@@ -54,13 +60,25 @@ export default async function LoginPage({
       <div className="relative w-full max-w-md">
         <Link
           href="/"
-          className="mb-8 flex items-center justify-center gap-2 font-display text-xl font-bold"
+          className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-bold"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
             <Sparkles className="h-4 w-4" strokeWidth={2.5} />
           </span>
           Балл
         </Link>
+
+        <div className="mb-6 text-center">
+          <p className="font-display text-lg font-bold">Готовься к ЕГЭ и ОГЭ без репетиторов</p>
+          <div className="mt-3 flex flex-col items-center gap-1.5">
+            {PITCH.map(({ icon: Icon, text }) => (
+              <span key={text} className="flex items-center gap-2 text-sm text-(--color-ink-soft)">
+                <Icon className="h-4 w-4 shrink-0 text-(--color-brand-blue)" />
+                {text}
+              </span>
+            ))}
+          </div>
+        </div>
 
         <div className="card-surface p-8">
           {errorMessage && (

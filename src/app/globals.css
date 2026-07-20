@@ -240,6 +240,15 @@ body {
     linear-gradient(180deg, #0e0e18 0%, #0c0c16 38%, #0a0e12 72%, #0a120e 100%);
 }
 
+/* ::before's white "sun glare" was tuned for the light theme's pastel
+   background — at dark-mode opacity/contrast it reads as a stray bright
+   patch drifting across the screen instead of a glare, since dark mode
+   already gets its glow from the two radial-gradients above. */
+.dark .dreamy-hero-bg::before {
+  background-image: radial-gradient(circle, rgba(120, 145, 255, 0.28) 0%, rgba(120, 145, 255, 0) 70%);
+  opacity: 0.5;
+}
+
 .noise-overlay {
   position: absolute;
   inset: 0;

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { Fingerprint } from "lucide-react";
 import { generateWebAuthnLoginOptions, verifyWebAuthnLogin } from "@/lib/actions/webauthn";
+import { DEVICE_ENROLLED_KEY } from "@/components/app/webauthn-enroll";
 
 export function WebAuthnLoginButton() {
   const [supported, setSupported] = useState(false);
@@ -11,9 +12,15 @@ export function WebAuthnLoginButton() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only show this button on a device that has actually enrolled a
+    // credential here before (via Profile → "Привязать это устройство").
+    // Without this check, a browser that supports WebAuthn but never
+    // enrolled anything would show the button anyway, tap it, and hit a
+    // confusing native "no passkeys found for this site" dialog instead of
+    // a normal in-app error.
     (async () => {
-      const ok = browserSupportsWebAuthn();
-      if (ok) setSupported(true);
+      const enrolledHere = localStorage.getItem(DEVICE_ENROLLED_KEY) === "1";
+      if (enrolledHere && browserSupportsWebAuthn()) setSupported(true);
     })();
   }, []);
 
