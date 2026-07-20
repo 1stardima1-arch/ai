@@ -252,3 +252,13 @@ npm run db:push     # применить schema.prisma к базе
 npm run db:seed     # загрузить/обновить контент
 npm run db:studio   # визуальный просмотр базы (Prisma Studio)
 ```
+
+**Обнулить список учеников** (все аккаунты, прогресс, историю ИИ-чата и
+сообщений поддержки — необратимо; предметы/темы/задания не трогает):
+```bash
+RESET_USERS_CONFIRM=yes DATABASE_URL="<прод-строка-подключения>" npm run db:reset-users
+```
+Без `RESET_USERS_CONFIRM=yes` скрипт откажется что-либо удалять — это
+защита от случайного запуска. `DATABASE_URL` здесь — продакшен-база
+(её видно в Vercel → Project Settings → Environment Variables), не та,
+что в локальном `.env`.
