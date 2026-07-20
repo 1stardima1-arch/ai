@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import { SwRegister } from "@/components/pwa/sw-register";
+import { AppSplash } from "@/components/app/app-splash";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -65,6 +66,7 @@ export default function RootLayout({
           }}
         />
         <SwRegister />
+        <AppSplash />
         {children}
       </body>
     </html>

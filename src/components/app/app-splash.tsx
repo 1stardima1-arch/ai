@@ -1,30 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { IntroParticles, StaggerTitle } from "@/components/app/intro-fx";
 
 // A real native-style launch screen — shown briefly every time the app is
 // cold-started (opened fresh, not on in-app navigation), not just once ever
-// like <Onboarding>. Mounting this in app/layout.tsx is what makes that
-// "once per launch" behavior automatic: Next.js keeps the layout mounted
-// across client-side navigations, so this only remounts on a real reload —
-// exactly a launch screen's job, no flags needed.
+// like <Onboarding>. Mounted in the root layout (not just app/layout.tsx) so
+// it plays on the very first cold start too, before the user has signed in —
+// the installed TWA's start_url is /app, which redirects straight to /login
+// for a logged-out user, so without this the very first launch went from the
+// native OS splash straight to a static login page with no transition at
+// all. Next.js keeps the root layout mounted across client-side navigations,
+// so this only remounts on a real reload/cold start — exactly a launch
+// screen's job, no flags needed. Restricted to /login and /app so a regular
+// browser visit to the marketing site doesn't get hijacked by a 3s overlay.
 export function AppSplash() {
+  const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const [visible, setVisible] = useState(true);
+  const eligible = pathname === "/login" || pathname?.startsWith("/app") === true;
 
   useEffect(() => {
+    if (!eligible) return;
     // Slow, deliberate on purpose — this is the one moment that should read
     // as "a real app is starting up", not a flash students barely register
     // before the dashboard appears.
     const timer = setTimeout(() => setVisible(false), reduceMotion ? 250 : 3000);
     return () => clearTimeout(timer);
-  }, [reduceMotion]);
+  }, [reduceMotion, eligible]);
 
   return (
     <AnimatePresence>
-      {visible && (
+      {eligible && visible && (
         <motion.div
           className="fixed inset-0 z-100 flex flex-col items-center justify-center overflow-hidden text-white"
           style={{

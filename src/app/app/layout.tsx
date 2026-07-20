@@ -6,7 +6,6 @@ import { NavLinks } from "@/components/app/nav-links";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Onboarding } from "@/components/app/onboarding";
-import { AppSplash } from "@/components/app/app-splash";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
@@ -33,7 +32,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-(--color-paper)">
-      <AppSplash />
       <Onboarding needsSetup={!user.prepLevel} subjects={allSubjects} />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
