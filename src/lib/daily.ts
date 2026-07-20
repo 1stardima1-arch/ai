@@ -57,7 +57,7 @@ export async function getDailyTasks(userId: string, count = 3) {
     number: true,
     difficulty: true,
     subject: { select: { id: true, name: true, slug: true, color: true, icon: true } },
-    topic: { select: { name: true } },
+    topic: { select: { id: true, name: true, slug: true, summary: true } },
   } as const;
   const orderBy = { id: "asc" as const }; // stable base order → deterministic shuffle
 
@@ -81,7 +81,7 @@ export async function getDailyTasks(userId: string, count = 3) {
   if (tasks.length < count) {
     tasks = await prisma.task.findMany({ where: baseWhere, select, orderBy });
   }
-  if (tasks.length === 0) return { dayKey, tasks: [] };
+  if (tasks.length === 0) return { dayKey, tasks: [], topics: [] };
 
   // Seeded shuffle of the whole bank, then take the first task of each
   // subject in shuffle order (spreads the set across subjects), topping up
@@ -123,6 +123,26 @@ export async function getDailyTasks(userId: string, count = 3) {
   });
   const attemptedIds = new Map(attempts.map((a) => [a.taskId, a.isCorrect]));
 
+  // "Теория дня": the topics behind today's tasks, deduplicated — so the
+  // theory shown on the dashboard always matches whichever tasks the daily
+  // rotation picked, and rotates right along with them.
+  const seenTopics = new Set<string>();
+  const topics = picked
+    .filter((t) => {
+      if (seenTopics.has(t.topic.id)) return false;
+      seenTopics.add(t.topic.id);
+      return true;
+    })
+    .map((t) => ({
+      id: t.topic.id,
+      name: t.topic.name,
+      summary: t.topic.summary,
+      subjectSlug: t.subject.slug,
+      subjectName: t.subject.name,
+      subjectColor: t.subject.color,
+      topicSlug: t.topic.slug,
+    }));
+
   return {
     dayKey,
     tasks: picked.map((t) => ({
@@ -130,5 +150,6 @@ export async function getDailyTasks(userId: string, count = 3) {
       attempted: attemptedIds.has(t.id),
       solvedCorrect: attemptedIds.get(t.id) === true,
     })),
+    topics,
   };
 }

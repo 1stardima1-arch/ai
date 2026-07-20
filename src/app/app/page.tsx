@@ -7,7 +7,7 @@ import { nextExamDate, daysUntil } from "@/lib/exam-date";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { LinkButton } from "@/components/ui/button";
 import { AnimatedBar } from "@/components/motion/animated-bar";
-import { ArrowRight, Target, TrendingUp, ListChecks, CalendarDays, CheckCircle2, Hourglass } from "lucide-react";
+import { ArrowRight, Target, TrendingUp, ListChecks, CalendarDays, CheckCircle2, Hourglass, BookOpen } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -133,6 +133,36 @@ export default async function DashboardPage() {
                 ) : (
                   <ArrowRight className="h-4 w-4 shrink-0 text-(--color-ink-soft)" />
                 )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {daily.topics.length > 0 && (
+        <div className="mt-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">
+              <BookOpen className="h-4 w-4" />
+              Теория дня
+            </h2>
+            <span className="text-xs font-semibold text-(--color-ink-soft)">
+              Под сегодняшние задания
+            </span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-3">
+            {daily.topics.map((t) => (
+              <Link
+                key={t.id}
+                href={`/app/subjects/${t.subjectSlug}/topics/${t.topicSlug}`}
+                className="card-surface press-spring block p-4"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: t.subjectColor }} />
+                  <span className="truncate text-xs font-bold text-(--color-ink-soft)">{t.subjectName}</span>
+                </div>
+                <div className="mt-1.5 text-sm font-semibold">{t.name}</div>
+                <div className="mt-1 line-clamp-2 text-xs text-(--color-ink-soft)">{t.summary}</div>
               </Link>
             ))}
           </div>

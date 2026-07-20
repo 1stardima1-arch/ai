@@ -6,18 +6,35 @@ import { prisma } from "@/lib/prisma";
 
 const examLabel: Record<string, string> = { EGE: "ЕГЭ", OGE: "ОГЭ" };
 
+// Regenerate at most once an hour instead of only on deploy, so the count
+// and card list track the database without needing a new deploy.
+export const revalidate = 3600;
+
+async function getSubjects() {
+  try {
+    return await prisma.subject.findMany({
+      orderBy: { order: "asc" },
+      include: { _count: { select: { topics: true, tasks: true } } },
+    });
+  } catch {
+    // The homepage is statically prerendered at build time — if the DB is
+    // briefly unreachable then (cold start, connection limit), throwing
+    // here would fail the *entire* production build, not just this
+    // section. Fail soft instead: render the page without live counts
+    // rather than taking the whole deploy down.
+    return [];
+  }
+}
+
 export async function SubjectsShowcase() {
-  const subjects = await prisma.subject.findMany({
-    orderBy: { order: "asc" },
-    include: { _count: { select: { topics: true, tasks: true } } },
-  });
+  const subjects = await getSubjects();
 
   return (
     <section id="subjects" className="py-20 sm:py-28">
       <Container>
         <Reveal className="mx-auto max-w-xl text-center">
           <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-            {subjects.length} направлений, готовых прямо сейчас
+            {subjects.length > 0 ? `${subjects.length} направлений, готовых прямо сейчас` : "Все направления ЕГЭ и ОГЭ"}
           </h2>
           <p className="mt-4 text-(--color-ink-soft)">
             Полный банк тем, заданий и теории по каждому предмету — и он постоянно растёт.
