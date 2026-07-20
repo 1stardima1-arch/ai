@@ -25,8 +25,13 @@ export function MobileNav() {
 
   return (
     <nav
-      className="liquid-glass glass-sheen fixed inset-x-3 bottom-3 z-40 flex items-center justify-between rounded-full px-2 py-2 lg:hidden"
-      style={{ viewTransitionName: "app-shell-mobilenav" } as React.CSSProperties}
+      className="liquid-glass glass-sheen fixed inset-x-3 z-40 flex items-center justify-between rounded-full px-2 py-2 lg:hidden"
+      style={
+        {
+          viewTransitionName: "app-shell-mobilenav",
+          bottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+        } as React.CSSProperties
+      }
     >
       {links.map((l) => {
         const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);

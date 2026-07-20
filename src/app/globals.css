@@ -40,12 +40,17 @@
 
 html {
   scroll-behavior: smooth;
+  /* Kills the browser's rubber-band bounce at the top/bottom of the page —
+     that bounce is one of the strongest "you're in a browser tab" tells,
+     since native/standalone apps don't do it. */
+  overscroll-behavior-y: none;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  overscroll-behavior-y: none;
 }
 
 .dark body {

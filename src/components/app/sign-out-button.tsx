@@ -6,7 +6,10 @@ export function SignOutButton() {
     <form
       action={async () => {
         "use server";
-        await signOut({ redirectTo: "/" });
+        // Back to the login screen, not the marketing homepage — inside the
+        // installed app, landing on the marketing site after sign-out would
+        // break the standalone feel.
+        await signOut({ redirectTo: "/login" });
       }}
     >
       <button

@@ -35,6 +35,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#4f6bff",
+  // Lets the app draw under the notch/home-indicator area instead of
+  // leaving a hard browser-chrome band there — required for the
+  // safe-area-inset-* CSS vars below to resolve to anything but 0.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -45,6 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="ru"
+      data-scroll-behavior="smooth"
       className={`${manrope.variable} ${unbounded.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-(--color-paper) text-(--color-ink)">

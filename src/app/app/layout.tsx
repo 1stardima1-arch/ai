@@ -6,6 +6,7 @@ import { NavLinks } from "@/components/app/nav-links";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Onboarding } from "@/components/app/onboarding";
+import { AppSplash } from "@/components/app/app-splash";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
@@ -32,18 +33,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-(--color-paper)">
+      <AppSplash />
       <Onboarding needsSetup={!user.prepLevel} subjects={allSubjects} />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
         <div className="blob blob-pink" />
         <div className="blob blob-green" />
       </div>
-      <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 py-6 sm:px-6">
+      <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] sm:px-6">
         <aside
           className="liquid-glass glass-sheen sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] p-5 lg:flex"
           style={{ viewTransitionName: "app-shell-sidebar" } as React.CSSProperties}
         >
-          <Link href="/" className="flex items-center gap-2 px-1 font-display text-lg font-bold">
+          {/* Points at the dashboard, not "/" — the marketing site has its own
+              header/CTAs and stepping into it from inside the installed app
+              breaks the standalone feel entirely. */}
+          <Link href="/app" className="flex items-center gap-2 px-1 font-display text-lg font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
@@ -67,7 +72,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </aside>
 
-        <div className="min-w-0 flex-1 pb-20 lg:pb-0">
+        <div className="min-w-0 flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
           <div
             className="mb-6 flex items-center justify-end gap-3"
             style={{ viewTransitionName: "app-shell-topbar" } as React.CSSProperties}
