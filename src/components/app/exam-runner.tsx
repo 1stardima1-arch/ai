@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { submitAttempt } from "@/lib/actions/attempts";
 import { finishMockExam } from "@/lib/actions/mock-exam";
+import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Timer, CheckCircle2, Flag } from "lucide-react";
@@ -13,6 +14,7 @@ type ExamTask = {
   type: "SHORT_ANSWER" | "CHOICE" | "MULTI_CHOICE" | "MATCHING" | "DETAILED_ANSWER" | "ESSAY";
   statement: string;
   options: string[] | null;
+  maxScore: number;
   answered: boolean;
 };
 
@@ -27,11 +29,13 @@ export function ExamRunner({
   title,
   remainingSec,
   tasks,
+  initialPhotoResults = {},
 }: {
   attemptId: string;
   title: string;
   remainingSec: number;
   tasks: ExamTask[];
+  initialPhotoResults?: Record<string, PhotoGradeResult>;
 }) {
   const [index, setIndex] = useState(() => {
     const firstUnanswered = tasks.findIndex((t) => !t.answered);
@@ -41,6 +45,8 @@ export function ExamRunner({
   const [answeredIds, setAnsweredIds] = useState<Set<string>>(
     () => new Set(tasks.filter((t) => t.answered).map((t) => t.id))
   );
+  const [photoResults, setPhotoResults] =
+    useState<Record<string, PhotoGradeResult>>(initialPhotoResults);
   const [timeLeft, setTimeLeft] = useState(remainingSec);
   const [finishing, setFinishing] = useState(false);
 
@@ -120,10 +126,16 @@ export function ExamRunner({
       <TaskCard
         key={task.id}
         task={task}
+        attemptId={attemptId}
         value={answers[task.id] ?? ""}
         onChange={(v) => setAnswers((a) => ({ ...a, [task.id]: v }))}
         onSave={(v) => saveAnswer(task.id, v)}
         answered={answeredIds.has(task.id)}
+        photoResult={photoResults[task.id]}
+        onPhotoGraded={(result) => {
+          setPhotoResults((p) => ({ ...p, [task.id]: result }));
+          setAnsweredIds((prev) => new Set(prev).add(task.id));
+        }}
       />
 
       <div className="mt-5 flex items-center justify-between">
@@ -157,17 +169,26 @@ export function ExamRunner({
 
 function TaskCard({
   task,
+  attemptId,
   value,
   onChange,
   onSave,
   answered,
+  photoResult,
+  onPhotoGraded,
 }: {
   task: ExamTask;
+  attemptId: string;
   value: string;
   onChange: (v: string) => void;
   onSave: (v: string) => void;
   answered: boolean;
+  photoResult?: PhotoGradeResult;
+  onPhotoGraded: (result: PhotoGradeResult) => void;
 }) {
+  const isFreeform = task.type === "DETAILED_ANSWER" || task.type === "ESSAY";
+  const [mode, setMode] = useState<"photo" | "text">("photo");
+
   return (
     <div className="card-surface p-6 sm:p-8">
       <p className="whitespace-pre-wrap text-[1.05rem] leading-relaxed">{task.statement}</p>
@@ -199,15 +220,50 @@ function TaskCard({
               </label>
             ))}
           </div>
-        ) : task.type === "DETAILED_ANSWER" || task.type === "ESSAY" ? (
-          <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onBlur={() => onSave(value)}
-            rows={8}
-            placeholder="Напиши здесь свой ответ…"
-            className="w-full rounded-2xl border border-black/10 bg-(--color-paper-dim) p-4 text-sm outline-none focus:border-(--color-brand-blue)"
-          />
+        ) : isFreeform ? (
+          <div>
+            <div className="mb-3 inline-flex gap-1 rounded-full bg-(--color-paper-dim) p-1 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setMode("photo")}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition-colors",
+                  mode === "photo" ? "bg-(--color-surface) shadow-(--shadow-soft)" : "text-(--color-ink-soft)"
+                )}
+              >
+                Фото
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("text")}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition-colors",
+                  mode === "text" ? "bg-(--color-surface) shadow-(--shadow-soft)" : "text-(--color-ink-soft)"
+                )}
+              >
+                Текст
+              </button>
+            </div>
+
+            {mode === "photo" ? (
+              <PhotoAnswer
+                taskId={task.id}
+                maxScore={task.maxScore}
+                mockExamAttemptId={attemptId}
+                initialResult={photoResult}
+                onGraded={onPhotoGraded}
+              />
+            ) : (
+              <textarea
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onBlur={() => onSave(value)}
+                rows={8}
+                placeholder="Напиши здесь свой ответ…"
+                className="w-full rounded-2xl border border-black/10 bg-(--color-paper-dim) p-4 text-sm outline-none focus:border-(--color-brand-blue)"
+              />
+            )}
+          </div>
         ) : (
           <form
             onSubmit={(e) => {
@@ -228,7 +284,7 @@ function TaskCard({
           </form>
         )}
 
-        {answered && (
+        {answered && !photoResult && (
           <div className="flex items-center gap-1.5 text-xs font-semibold text-(--color-brand-green)">
             <CheckCircle2 className="h-3.5 w-3.5" /> Ответ сохранён
           </div>

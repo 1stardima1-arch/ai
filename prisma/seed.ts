@@ -96,13 +96,21 @@ async function main() {
       const firstAutoGraded = createdTasks.find(
         (t) => t.type !== "ESSAY" && t.type !== "DETAILED_ANSWER"
       );
+      const firstManualGraded = createdTasks.find(
+        (t) => t.type === "ESSAY" || t.type === "DETAILED_ANSWER"
+      );
       if (firstAutoGraded) {
         mockExamTaskIds.push(firstAutoGraded.id);
       }
+      if (firstManualGraded) {
+        mockExamTaskIds.push(firstManualGraded.id);
+      }
     }
 
-    // Build a compact mock exam from one auto-graded task per topic (essays/detailed
-    // answers need the AI tutor, not an instant score, so they're practiced separately).
+    // Build a compact mock exam from one task per topic (plus its
+    // essay/detailed-answer task where the topic has one) — matches the real
+    // ФИПИ exam shape of an auto-graded "часть 1" and a written "часть 2"
+    // that a photo-graded AI check resolves inside the exam itself.
     const existingMock = await prisma.mockExam.findFirst({ where: { subjectId: dbSubject.id } });
     const mockExam = existingMock
       ? existingMock

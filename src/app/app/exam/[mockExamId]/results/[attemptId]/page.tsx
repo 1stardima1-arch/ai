@@ -46,27 +46,39 @@ export default async function ExamResultsPage({
       </div>
 
       <div className="mt-6 space-y-2.5">
-        {attempt.attempts.map((a) => (
-          <div key={a.id} className="card-surface flex items-center gap-3 p-4">
-            {!isAutoGraded(a.task.type) ? (
-              <Sparkles className="h-5 w-5 shrink-0 text-(--color-brand-blue)" />
-            ) : a.isCorrect ? (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-(--color-brand-green)" />
-            ) : (
-              <XCircle className="h-5 w-5 shrink-0 text-(--color-brand-pink)" />
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold">{a.task.topic.name}</div>
-              <div className="text-xs text-(--color-ink-soft)">
-                Задание {a.task.number}
-                {!isAutoGraded(a.task.type) && " · разбери с ИИ-репетитором"}
+        {attempt.attempts.map((a) => {
+          const gradedByAi = !isAutoGraded(a.task.type) && a.aiFeedback != null;
+          const pending = !isAutoGraded(a.task.type) && !gradedByAi;
+          return (
+            <div key={a.id} className="card-surface p-4">
+              <div className="flex items-center gap-3">
+                {pending ? (
+                  <Sparkles className="h-5 w-5 shrink-0 text-(--color-brand-blue)" />
+                ) : a.isCorrect ? (
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-(--color-brand-green)" />
+                ) : (
+                  <XCircle className="h-5 w-5 shrink-0 text-(--color-brand-pink)" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold">{a.task.topic.name}</div>
+                  <div className="text-xs text-(--color-ink-soft)">
+                    Задание {a.task.number}
+                    {pending && " · разбери с ИИ-репетитором"}
+                    {gradedByAi && " · проверено ИИ по фото"}
+                  </div>
+                </div>
+                <span className="shrink-0 text-sm font-bold text-(--color-ink-soft)">
+                  {pending ? "на проверке" : `${a.scoreAwarded}/${a.task.maxScore}`}
+                </span>
               </div>
+              {gradedByAi && a.aiFeedback && (
+                <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-(--color-ink-soft)">
+                  {a.aiFeedback}
+                </p>
+              )}
             </div>
-            <span className="shrink-0 text-sm font-bold text-(--color-ink-soft)">
-              {isAutoGraded(a.task.type) ? `${a.scoreAwarded}/${a.task.maxScore}` : "на проверке"}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

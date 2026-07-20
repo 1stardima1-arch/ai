@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { submitAttempt } from "@/lib/actions/attempts";
 import { AiChat } from "@/components/app/ai-chat";
+import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { Badge } from "@/components/ui/card";
 import { Button, LinkButton } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Sparkles, ArrowRight, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, Sparkles, ArrowRight, Clock, Keyboard, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Task = {
@@ -42,10 +43,13 @@ export function PracticeTask({
   const [answer, setAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ isCorrect: boolean | null } | null>(null);
+  const [photoResult, setPhotoResult] = useState<PhotoGradeResult | null>(null);
+  const [answerMode, setAnswerMode] = useState<"photo" | "text">("photo");
   const [showAi, setShowAi] = useState(false);
   const [startedAt] = useState(() => Date.now());
 
   const options = Array.isArray(task.options) ? (task.options as string[]) : null;
+  const graded = result || photoResult;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,9 +75,9 @@ export function PracticeTask({
 
           <p className="whitespace-pre-wrap text-[1.05rem] leading-relaxed">{task.statement}</p>
 
-          {!result && (
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              {options ? (
+          {options ? (
+            !result && (
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <div className="space-y-2">
                   {options.map((opt) => (
                     <label
@@ -97,56 +101,105 @@ export function PracticeTask({
                     </label>
                   ))}
                 </div>
-              ) : isFreeform(task.type) ? (
-                <textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  rows={8}
-                  placeholder="Напиши здесь свой ответ…"
-                  className="w-full rounded-2xl border border-black/10 bg-(--color-paper-dim) p-4 text-sm outline-none focus:border-(--color-brand-blue)"
-                />
+                <Button type="submit" disabled={!answer.trim() || submitting}>
+                  {submitting ? "Проверяю…" : "Ответить"}
+                </Button>
+              </form>
+            )
+          ) : isFreeform(task.type) ? (
+            <div className="mt-6">
+              {!graded && (
+                <div className="mb-3 inline-flex gap-1 rounded-full bg-(--color-paper-dim) p-1 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setAnswerMode("photo")}
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-3 py-1.5 transition-colors",
+                      answerMode === "photo" ? "bg-(--color-surface) shadow-(--shadow-soft)" : "text-(--color-ink-soft)"
+                    )}
+                  >
+                    <Camera className="h-3.5 w-3.5" /> Фото
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAnswerMode("text")}
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-3 py-1.5 transition-colors",
+                      answerMode === "text" ? "bg-(--color-surface) shadow-(--shadow-soft)" : "text-(--color-ink-soft)"
+                    )}
+                  >
+                    <Keyboard className="h-3.5 w-3.5" /> Текст
+                  </button>
+                </div>
+              )}
+
+              {answerMode === "photo" ? (
+                <PhotoAnswer taskId={task.id} maxScore={task.maxScore} onGraded={setPhotoResult} />
               ) : (
+                !result && (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <textarea
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      rows={8}
+                      placeholder="Напиши здесь свой ответ…"
+                      className="w-full rounded-2xl border border-black/10 bg-(--color-paper-dim) p-4 text-sm outline-none focus:border-(--color-brand-blue)"
+                    />
+                    <Button type="submit" disabled={!answer.trim() || submitting}>
+                      {submitting ? "Проверяю…" : "Ответить"}
+                    </Button>
+                  </form>
+                )
+              )}
+            </div>
+          ) : (
+            !result && (
+              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <input
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   placeholder="Введи ответ"
                   className="w-full rounded-full border border-black/10 bg-(--color-paper-dim) px-5 py-3.5 text-sm outline-none focus:border-(--color-brand-blue)"
                 />
-              )}
-
-              <Button type="submit" disabled={!answer.trim() || submitting}>
-                {submitting ? "Проверяю…" : "Ответить"}
-              </Button>
-            </form>
+                <Button type="submit" disabled={!answer.trim() || submitting}>
+                  {submitting ? "Проверяю…" : "Ответить"}
+                </Button>
+              </form>
+            )
           )}
 
-          {result && (
+          {graded && (
             <div className="mt-6 space-y-4">
-              {result.isCorrect === true && (
+              {result?.isCorrect === true && (
                 <div className="flex items-center gap-2 rounded-2xl bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
                   <CheckCircle2 className="h-5 w-5" /> Верно! Отличная работа.
                 </div>
               )}
-              {result.isCorrect === false && (
+              {result?.isCorrect === false && (
                 <div className="flex items-center gap-2 rounded-2xl bg-pink-50 px-4 py-3 text-sm font-bold text-pink-700">
                   <XCircle className="h-5 w-5" /> Пока не совсем. Правильный ответ: {task.correctAnswer}
                 </div>
               )}
-              {result.isCorrect === null && (
+              {result?.isCorrect === null && (
                 <div className="flex items-center gap-2 rounded-2xl bg-(--color-sky-2) px-4 py-3 text-sm font-bold text-(--color-brand-blue)">
                   <Sparkles className="h-5 w-5" /> Ответ сохранён — такие задания оценивает ИИ-репетитор, не автомат.
+                </div>
+              )}
+              {photoResult && (
+                <div className="flex items-center gap-2 rounded-2xl bg-(--color-sky-2) px-4 py-3 text-sm font-bold text-(--color-brand-blue)">
+                  <Sparkles className="h-5 w-5" /> {photoResult.score}/{photoResult.maxScore} баллов — проверено ИИ по фото
                 </div>
               )}
 
               <div className="rounded-2xl bg-(--color-paper-dim) p-5 text-sm leading-relaxed text-(--color-ink-soft)">
                 <div className="mb-1.5 text-xs font-bold uppercase tracking-wide text-(--color-ink)">
-                  Объяснение
+                  {photoResult ? "Обратная связь от ИИ" : "Объяснение"}
                 </div>
-                {task.explanation}
+                {photoResult ? photoResult.feedback : task.explanation}
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {!showAi && (
+                {!showAi && !photoResult && (
                   <Button variant="outline" onClick={() => setShowAi(true)} type="button">
                     <Sparkles className="h-4 w-4" /> Разобрать с ИИ
                   </Button>
@@ -187,7 +240,7 @@ export function PracticeTask({
         </div>
       )}
 
-      {!showAi && (
+      {!showAi && !photoResult && (
         <div className="hidden lg:block">
           <div className="card-surface p-6 text-sm text-(--color-ink-soft)">
             После ответа здесь появится ИИ-репетитор, который разберёт задание вместе с тобой.

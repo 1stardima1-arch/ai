@@ -1,6 +1,10 @@
 import Groq from "groq-sdk";
 
 const MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+// A vision-capable model, needed only for grading photos of handwritten
+// detailed-answer/essay tasks (submitAttemptPhoto) — separate from MODEL
+// since not every model Groq hosts can see images.
+const VISION_MODEL = process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
 
 let client: Groq | null = null;
 
@@ -115,4 +119,83 @@ ${taskStatement}
 Объясни: 1) в чём вероятная причина именно такой ошибки, 2) как рассуждать правильно, 3) короткий совет, чтобы не повторить её снова.`;
 
   return generateText(prompt);
+}
+
+// Grades a photo of a handwritten answer to a DETAILED_ANSWER/ESSAY task —
+// the ФИПИ-style "часть 2" tasks that have no single string answer to
+// string-compare against. Asks the model to act as an exam expert and
+// return a strict score + written feedback, the same way a human checker
+// would mark a scanned answer sheet.
+export async function gradeAnswerPhoto({
+  taskStatement,
+  referenceAnswer,
+  explanation,
+  maxScore,
+  imageBase64,
+  mimeType,
+}: {
+  taskStatement: string;
+  referenceAnswer: string;
+  explanation: string;
+  maxScore: number;
+  imageBase64: string;
+  mimeType: string;
+}): Promise<{ score: number; feedback: string }> {
+  const groq = getClient();
+
+  const prompt = `Ты — опытный эксперт ЕГЭ/ОГЭ, проверяющий развёрнутый ответ ученика по фотографии его рукописного решения.
+
+Условие задания:
+"""
+${taskStatement}
+"""
+
+Критерии/эталонный ответ:
+"""
+${referenceAnswer}
+"""
+
+Разбор правильного решения:
+"""
+${explanation}
+"""
+
+Максимальный балл за задание: ${maxScore}.
+
+Внимательно прочитай текст на фотографии (почерк может быть неровным, могут быть зачёркивания — старайся распознать максимально точно). Сравни с критериями и оцени объективно и справедливо, как настоящий эксперт: не завышай баллы из вежливости и не занижай из излишней строгости. Если на фото вообще не видно решения по теме задания, ставь 0.
+
+Ответь СТРОГО в виде JSON без какого-либо текста до или после:
+{"score": <целое число от 0 до ${maxScore}>, "feedback": "<обратная связь на русском, тепло и по делу, 3-5 предложений: что верно, чего не хватает, как улучшить>"}`;
+
+  const res = await groq.chat.completions.create({
+    model: VISION_MODEL,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        ],
+      },
+    ],
+    temperature: 0.3,
+    response_format: { type: "json_object" },
+  });
+
+  const raw = res.choices[0]?.message?.content ?? "{}";
+  let parsed: { score?: unknown; feedback?: unknown };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("ИИ вернул ответ в неожиданном формате при проверке фото");
+  }
+
+  const scoreNum = typeof parsed.score === "number" ? parsed.score : Number(parsed.score);
+  const score = Number.isFinite(scoreNum) ? Math.max(0, Math.min(maxScore, Math.round(scoreNum))) : 0;
+  const feedback =
+    typeof parsed.feedback === "string" && parsed.feedback.trim()
+      ? parsed.feedback.trim().slice(0, 2000)
+      : "Не получилось сформировать обратную связь — попробуй переснять фото почётче и отправить ещё раз.";
+
+  return { score, feedback };
 }

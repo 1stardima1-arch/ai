@@ -226,6 +226,11 @@ model Attempt {
   givenAnswer    String
   isCorrect      Boolean
   scoreAwarded   Int      @default(0)
+  // Set only when an ESSAY/DETAILED_ANSWER task was graded from a photo of
+  // the handwritten answer — the AI's written feedback, kept so results
+  // pages can show *why* the score is what it is, not just the number. The
+  // photo itself is never persisted (see submitAttemptPhoto).
+  aiFeedback     String?  @db.Text
   timeSpentSec   Int      @default(0)
   mockExamAttemptId String?
   createdAt      DateTime @default(now())

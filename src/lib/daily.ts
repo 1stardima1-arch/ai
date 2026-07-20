@@ -36,7 +36,7 @@ function difficultyRange(prepLevel: string | null): [number, number] {
   }
 }
 
-export async function getDailyTasks(userId: string, count = 3) {
+export async function getDailyTasks(userId: string, count = 8) {
   const dayKey = moscowDayKey();
 
   const user = await prisma.user.findUnique({
@@ -84,8 +84,11 @@ export async function getDailyTasks(userId: string, count = 3) {
   if (tasks.length === 0) return { dayKey, tasks: [], topics: [] };
 
   // Seeded shuffle of the whole bank, then take the first task of each
-  // subject in shuffle order (spreads the set across subjects), topping up
-  // with remaining tasks if there are fewer subjects than `count`.
+  // TOPIC in shuffle order (spreads the set across as many distinct topics
+  // as possible — finer-grained than spreading across subjects, so the
+  // daily set covers more genuinely different material out of a bank
+  // that's still fairly thin per topic), topping up with remaining tasks if
+  // there are fewer topics than `count`.
   const rand = mulberry32(dayKey * 2654435761);
   const shuffled = [...tasks];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -93,12 +96,12 @@ export async function getDailyTasks(userId: string, count = 3) {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  const seenSubjects = new Set<string>();
+  const pickedTopics = new Set<string>();
   const picked: typeof shuffled = [];
   for (const t of shuffled) {
     if (picked.length >= count) break;
-    if (!seenSubjects.has(t.subject.id)) {
-      seenSubjects.add(t.subject.id);
+    if (!pickedTopics.has(t.topic.id)) {
+      pickedTopics.add(t.topic.id);
       picked.push(t);
     }
   }

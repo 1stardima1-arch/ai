@@ -32,17 +32,34 @@ export default async function ExamRunPage({
 
   const answeredTaskIds = new Set(attempt.attempts.map((a) => a.taskId));
 
+  // Rehydrate any already-graded photo answers (ai FeedBack set only by
+  // submitAttemptPhoto) so revisiting a task via the stepper still shows its
+  // score instead of resetting to the empty upload prompt.
+  const initialPhotoResults: Record<string, { score: number; maxScore: number; feedback: string }> = {};
+  const taskMaxScoreById = new Map(attempt.mockExam.tasks.map((mt) => [mt.task.id, mt.task.maxScore]));
+  for (const a of attempt.attempts) {
+    if (a.aiFeedback) {
+      initialPhotoResults[a.taskId] = {
+        score: a.scoreAwarded,
+        maxScore: taskMaxScoreById.get(a.taskId) ?? a.scoreAwarded,
+        feedback: a.aiFeedback,
+      };
+    }
+  }
+
   return (
     <ExamRunner
       attemptId={attemptId}
       title={attempt.mockExam.title}
       remainingSec={remainingSec}
+      initialPhotoResults={initialPhotoResults}
       tasks={attempt.mockExam.tasks.map((mt) => ({
         id: mt.task.id,
         number: mt.task.number,
         type: mt.task.type,
         statement: mt.task.statement,
         options: mt.task.options as string[] | null,
+        maxScore: mt.task.maxScore,
         answered: answeredTaskIds.has(mt.task.id),
       }))}
     />
