@@ -83,30 +83,6 @@ if (process.env.RESEND_API_KEY) {
   );
 }
 
-if (process.env.ENABLE_DEMO_LOGIN === "true") {
-  providers.push(
-    Credentials({
-      id: "demo",
-      name: "Демо-вход",
-      credentials: {
-        name: { label: "Имя", type: "text" },
-      },
-      async authorize(credentials) {
-        const name = (credentials?.name as string)?.trim() || "Гость";
-        const email = `demo-${name.toLowerCase().replace(/\s+/g, "-")}@demo.local`;
-
-        const user = await prisma.user.upsert({
-          where: { email },
-          update: {},
-          create: { email, name, image: null },
-        });
-
-        return { id: user.id, name: user.name, email: user.email, image: user.image, username: user.username };
-      },
-    })
-  );
-}
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },

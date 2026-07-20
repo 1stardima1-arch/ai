@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/app/theme-toggle";
 import { NAME_CHANGE_COOLDOWN_DAYS } from "@/lib/avatars";
 import { isAdminSession } from "@/lib/admin";
 import { WebAuthnEnroll } from "@/components/app/webauthn-enroll";
+import { DeleteAccountCard } from "@/components/app/delete-account-button";
 import { Flame, Star, Lock, Moon, LifeBuoy, ChevronRight, ShieldCheck, Fingerprint } from "lucide-react";
 
 export default async function ProfilePage() {
@@ -158,6 +159,8 @@ export default async function ProfilePage() {
             <ChevronRight className="h-4 w-4 shrink-0 text-(--color-ink-soft)" />
           </Link>
         )}
+
+        <DeleteAccountCard confirmTarget={user.username ?? user.email ?? ""} />
       </div>
 
       <h2 className="mt-8 text-sm font-bold uppercase tracking-wide text-(--color-ink-soft)">Достижения</h2>

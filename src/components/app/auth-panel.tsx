@@ -11,18 +11,14 @@ import { WebAuthnLoginButton } from "@/components/app/webauthn-login-button";
 
 export function AuthPanel({
   hasEmail,
-  hasDemo,
   redirectTo,
   signinAction,
   emailAction,
-  demoAction,
 }: {
   hasEmail: boolean;
-  hasDemo: boolean;
   redirectTo: string;
   signinAction: (formData: FormData) => Promise<void>;
   emailAction: (formData: FormData) => Promise<void>;
-  demoAction: (formData: FormData) => Promise<void>;
 }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [avatarKey, setAvatarKey] = useState<string | null>(null);
@@ -100,48 +96,30 @@ export function AuthPanel({
 
           <WebAuthnLoginButton />
 
-          {(hasEmail || hasDemo) && (
-            <div className="my-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-(--color-ink-soft)">
-              <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-              или
-              <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
-            </div>
-          )}
-
           {hasEmail && (
-            <form action={emailAction} className="flex gap-2">
-              <input
-                name="email"
-                type="email"
-                placeholder="Почта"
-                required
-                className="flex-1 rounded-full border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-3 text-sm outline-none focus:border-(--color-brand-blue)"
-              />
-              <button
-                type="submit"
-                className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-3 text-sm font-semibold shadow-(--shadow-soft)"
-              >
-                <Mail className="h-4 w-4" />
-                Ссылкой
-              </button>
-            </form>
-          )}
-
-          {hasDemo && (
-            <form action={demoAction} className="mt-2.5 flex gap-2">
-              <input
-                name="name"
-                placeholder="Демо-вход: как тебя зовут?"
-                required
-                className="flex-1 rounded-full border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-3 text-sm outline-none focus:border-(--color-brand-blue)"
-              />
-              <button
-                type="submit"
-                className="flex shrink-0 items-center justify-center gap-1.5 rounded-full btn-gradient px-4 py-3 text-sm font-semibold"
-              >
-                Войти
-              </button>
-            </form>
+            <>
+              <div className="my-5 flex items-center gap-3 text-xs font-semibold uppercase tracking-wide text-(--color-ink-soft)">
+                <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+                или
+                <span className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+              </div>
+              <form action={emailAction} className="flex gap-2">
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="Почта"
+                  required
+                  className="flex-1 rounded-full border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-3 text-sm outline-none focus:border-(--color-brand-blue)"
+                />
+                <button
+                  type="submit"
+                  className="flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-black/10 dark:border-white/10 bg-(--color-surface) px-4 py-3 text-sm font-semibold shadow-(--shadow-soft)"
+                >
+                  <Mail className="h-4 w-4" />
+                  Ссылкой
+                </button>
+              </form>
+            </>
           )}
         </div>
       ) : (

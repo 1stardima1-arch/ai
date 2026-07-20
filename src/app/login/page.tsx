@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signIn } from "@/auth";
 import { Sparkles, BookOpenCheck, Wand2, TrendingUp } from "lucide-react";
 import { AuthPanel } from "@/components/app/auth-panel";
+import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
 const PITCH = [
@@ -12,7 +13,6 @@ const PITCH = [
 
 const providers = {
   email: !!process.env.RESEND_API_KEY,
-  demo: process.env.ENABLE_DEMO_LOGIN === "true",
 };
 
 const errorMessages: Record<string, string> = {
@@ -43,18 +43,9 @@ export default async function LoginPage({
     await signIn("resend", { email, redirectTo });
   }
 
-  async function demoSignIn(formData: FormData) {
-    "use server";
-    const name = (formData.get("name") as string) || "Гость";
-    await signIn("demo", { name, redirectTo });
-  }
-
   return (
-    <div className="dreamy-hero-bg relative flex min-h-screen items-center justify-center px-4 py-16">
-      <div className="blob blob-blue" />
-      <div className="blob blob-pink" />
-      <div className="hill" />
-      <div className="noise-overlay" />
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-16">
+      <AuthBackdrop />
 
       <PageTransition glow="never">
       <div className="relative w-full max-w-md">
@@ -89,11 +80,9 @@ export default async function LoginPage({
 
           <AuthPanel
             hasEmail={providers.email}
-            hasDemo={providers.demo}
             redirectTo={redirectTo}
             signinAction={signinAction}
             emailAction={emailSignIn}
-            demoAction={demoSignIn}
           />
         </div>
       </div>

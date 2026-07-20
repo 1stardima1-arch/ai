@@ -1,16 +1,14 @@
 import Link from "next/link";
 import { Mail, Sparkles } from "lucide-react";
+import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
 export const metadata = { title: "Проверь почту — Балл" };
 
 export default function CheckEmailPage() {
   return (
-    <div className="dreamy-hero-bg relative flex min-h-screen items-center justify-center px-4 py-16">
-      <div className="blob blob-blue" />
-      <div className="blob blob-pink" />
-      <div className="hill" />
-      <div className="noise-overlay" />
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-16">
+      <AuthBackdrop />
 
       <PageTransition glow="never">
         <div className="relative w-full max-w-md">

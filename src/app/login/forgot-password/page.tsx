@@ -1,17 +1,15 @@
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { ForgotPasswordForm } from "@/components/app/forgot-password-form";
+import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
 export const metadata = { title: "Восстановление пароля — Балл" };
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="dreamy-hero-bg relative flex min-h-screen items-center justify-center px-4 py-16">
-      <div className="blob blob-blue" />
-      <div className="blob blob-pink" />
-      <div className="hill" />
-      <div className="noise-overlay" />
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-16">
+      <AuthBackdrop />
 
       <PageTransition glow="never">
         <div className="relative w-full max-w-md">
