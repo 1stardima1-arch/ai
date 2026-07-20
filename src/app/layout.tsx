@@ -55,11 +55,13 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-(--color-paper) text-(--color-ink)">
         {/* Runs before first paint so the page never flashes light-then-dark
             (or vice versa) — the alternative, applying the class from a
-            client component after hydration, would always show a flash. */}
+            client component after hydration, would always show a flash.
+            Dark is the default theme: only an explicit "light" choice
+            (saved by ThemeToggle) turns it off. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(localStorage.getItem('ball-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}",
+              "try{if(localStorage.getItem('ball-theme')!=='light')document.documentElement.classList.add('dark')}catch(e){}",
           }}
         />
         <SwRegister />

@@ -13,7 +13,7 @@ import type {
 } from "@simplewebauthn/types";
 import { auth, signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { rpID, rpName, origin, toBase64Url, fromBase64Url } from "@/lib/webauthn";
+import { rpName, getRpConfig, toBase64Url, fromBase64Url } from "@/lib/webauthn";
 
 const CHALLENGE_COOKIE = "webauthn_challenge";
 const COOKIE_OPTS = {
@@ -39,6 +39,7 @@ export async function generateWebAuthnRegistrationOptions() {
     select: { credentialID: true, transports: true },
   });
 
+  const { rpID } = await getRpConfig();
   const options = await generateRegistrationOptions({
     rpName,
     rpID,
@@ -71,6 +72,7 @@ export async function verifyWebAuthnRegistration(response: RegistrationResponseJ
   const expectedChallenge = jar.get(CHALLENGE_COOKIE)?.value;
   if (!expectedChallenge) return { ok: false, error: "Истекло время — попробуй ещё раз." };
 
+  const { rpID, origin } = await getRpConfig();
   let verification;
   try {
     verification = await verifyRegistrationResponse({
@@ -112,6 +114,7 @@ export async function removeWebAuthnCredential(id: string): Promise<WebAuthnResu
 // --- Logging in with a previously-enrolled fingerprint (usernameless) ---
 
 export async function generateWebAuthnLoginOptions() {
+  const { rpID } = await getRpConfig();
   const options = await generateAuthenticationOptions({
     rpID,
     userVerification: "preferred",
@@ -135,6 +138,7 @@ export async function verifyWebAuthnLogin(response: AuthenticationResponseJSON):
   });
   if (!authenticator) return { ok: false, error: "Это устройство не привязано ни к одному аккаунту." };
 
+  const { rpID, origin } = await getRpConfig();
   let verification;
   try {
     verification = await verifyAuthenticationResponse({

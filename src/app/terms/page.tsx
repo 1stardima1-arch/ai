@@ -1,7 +1,8 @@
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { Container } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
+
+const CONTACT_EMAIL = process.env.SUPPORT_EMAIL || "bal.support.exam@gmail.com";
 
 export const metadata = { title: "Пользовательское соглашение — Балл" };
 
@@ -16,30 +17,25 @@ export default function TermsPage() {
           </h1>
           <p className="mt-2 text-sm text-(--color-ink-soft)">Последнее обновление: {new Date().toLocaleDateString("ru-RU")}</p>
 
-          <div className="mt-6 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            <AlertTriangle className="h-5 w-5 shrink-0" />
-            <p>
-              Это черновик документа общего характера. Перед публичным запуском (в том числе
-              в RuStore) замените плейсхолдеры на реальные реквизиты и покажите текст юристу.
-            </p>
-          </div>
-
           <div className="prose-theory mt-8 space-y-6 text-sm leading-relaxed text-(--color-ink-soft)">
             <section>
               <h2 className="font-display text-lg font-bold text-(--color-ink)">1. Предмет соглашения</h2>
               <p className="mt-2">
-                Настоящее соглашение регулирует отношения между [укажите наименование
-                организации / ИП] (далее — «Сервис») и пользователем сервиса «Балл»
-                в связи с использованием функций подготовки к ЕГЭ и ОГЭ: банка заданий,
-                теории, ИИ-репетитора, аналитики прогресса и пробных экзаменов.
+                Настоящее соглашение регулирует отношения между сервисом «Балл» (далее —
+                «Сервис») и пользователем в связи с использованием функций подготовки к ЕГЭ
+                и ОГЭ: банка заданий, теории, ИИ-репетитора, аналитики прогресса и пробных
+                экзаменов. По вопросам, связанным с настоящим соглашением, можно обратиться на
+                {" "}{CONTACT_EMAIL}.
               </p>
             </section>
 
             <section>
               <h2 className="font-display text-lg font-bold text-(--color-ink)">2. Регистрация и аккаунт</h2>
               <p className="mt-2">
-                Доступ к Сервису предоставляется после входа по почте или через демо-режим.
-                Пользователь несёт ответственность за сохранность доступа к своему аккаунту.
+                Доступ к Сервису предоставляется после входа по нику и паролю, по почте
+                (ссылкой) или через демо-режим; на устройствах с поддержкой можно также
+                настроить вход по отпечатку/Face ID. Пользователь несёт ответственность за
+                сохранность доступа к своему аккаунту, включая пароль.
               </p>
             </section>
 

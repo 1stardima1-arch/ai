@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 import { subjects as coreSubjects, achievements } from "./seed-data";
 import { extraSubjects } from "./seed-data-extra";
 
@@ -130,6 +131,23 @@ async function main() {
       update: a,
       create: a,
     });
+  }
+
+  // Runs on every deploy alongside everything else above, so setting
+  // ADMIN_USERNAME + ADMIN_PASSWORD in Vercel is enough to get admin
+  // access — no separate script to run by hand. Safe to leave both set
+  // permanently (re-running just keeps the password in sync); ADMIN_PASSWORD
+  // can also be removed from the environment after the first deploy that
+  // picks it up, since the hash is already stored by then.
+  if (process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD) {
+    const username = process.env.ADMIN_USERNAME.trim();
+    const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
+    await prisma.user.upsert({
+      where: { username },
+      update: { passwordHash },
+      create: { username, name: username, passwordHash },
+    });
+    console.log(`  ✓ Админ-аккаунт «${username}» готов.`);
   }
 
   console.log("Done.");

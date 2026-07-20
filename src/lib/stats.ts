@@ -1,7 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getSubjectsWithProgress(userId: string) {
+  const enrollments = await prisma.userSubject.findMany({
+    where: { userId },
+    select: { subjectId: true },
+  });
+  const enrolledIds = enrollments.map((e) => e.subjectId);
+
   const subjects = await prisma.subject.findMany({
+    // Only what the student actually picked during onboarding — e.g. if
+    // they only chose ОГЭ subjects, ЕГЭ ones shouldn't show up here at
+    // all. Falls back to everything only if they somehow have zero
+    // enrollments (shouldn't normally happen — onboarding requires
+    // picking at least one), so this never renders an empty page.
+    where: enrolledIds.length > 0 ? { id: { in: enrolledIds } } : undefined,
     orderBy: { order: "asc" },
     include: {
       _count: { select: { tasks: true } },

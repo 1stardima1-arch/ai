@@ -22,7 +22,8 @@ function getSnapshot() {
 }
 
 function getServerSnapshot() {
-  return false;
+  // Matches the inline script in layout.tsx — dark is the default theme.
+  return true;
 }
 
 export function ThemeToggle() {

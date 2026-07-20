@@ -78,9 +78,16 @@ export function Onboarding({
 
   useEffect(() => {
     const slidesNeeded = !localStorage.getItem(SEEN_FLAG);
+    // Always start at "slides", never jump straight to "exam" — the
+    // localStorage flag is per-device, not per-account, so a brand new
+    // account signing in on a device that's seen the slides before (a
+    // shared/test device, or just re-registering) must still get the
+    // explanation of what the app is before setup, not skip straight
+    // past it. nextFromSlides() already handles routing into "exam"
+    // after slides finish when needsSetup is true.
     if (slidesNeeded || needsSetup) {
       const id = requestAnimationFrame(() => {
-        setPhase(slidesNeeded ? "slides" : "exam");
+        setPhase("slides");
         setVisible(true);
       });
       return () => cancelAnimationFrame(id);

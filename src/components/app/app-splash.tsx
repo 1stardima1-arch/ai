@@ -15,7 +15,10 @@ export function AppSplash() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), reduceMotion ? 250 : 1350);
+    // Slow, deliberate on purpose — this is the one moment that should read
+    // as "a real app is starting up", not a flash students barely register
+    // before the dashboard appears.
+    const timer = setTimeout(() => setVisible(false), reduceMotion ? 250 : 3000);
     return () => clearTimeout(timer);
   }, [reduceMotion]);
 
@@ -35,22 +38,27 @@ export function AppSplash() {
 
           <motion.span
             className="siri-orb relative h-20 w-20"
-            initial={reduceMotion ? false : { scale: 0.5, opacity: 0 }}
+            initial={reduceMotion ? false : { scale: 0.35, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 220, damping: 16 }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           />
 
-          <div className="relative z-10 mt-7">
+          <motion.div
+            className="relative z-10 mt-7"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9, duration: 0.3 }}
+          >
             <StaggerTitle text="Балл" className="font-display text-4xl font-extrabold" />
-          </div>
+          </motion.div>
 
           <motion.p
             className="relative z-10 mt-2 text-sm text-white/55"
             initial={reduceMotion ? { opacity: 0.55 } : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55, duration: 0.5 }}
+            transition={{ delay: 1.7, duration: 0.6 }}
           >
-            ИИ-репетитор для ЕГЭ и ОГЭ
+            ИИ-репетитор для ЕГЭ и ОГЭ — понятная теория и разбор ошибок
           </motion.p>
         </motion.div>
       )}
