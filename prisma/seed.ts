@@ -32,6 +32,7 @@ async function main() {
     });
 
     const mockExamTaskIds: string[] = [];
+    let freeformCount = 0;
 
     for (const [topicOrder, topic] of subject.topics.entries()) {
       const dbTopic = await prisma.topic.upsert({
@@ -104,23 +105,40 @@ async function main() {
       }
       if (firstManualGraded) {
         mockExamTaskIds.push(firstManualGraded.id);
+        freeformCount++;
       }
     }
 
     // Build a compact mock exam from one task per topic (plus its
     // essay/detailed-answer task where the topic has one) — matches the real
     // ФИПИ exam shape of an auto-graded "часть 1" and a written "часть 2"
-    // that a photo-graded AI check resolves inside the exam itself.
+    // that a photo/text-graded AI check resolves inside the exam itself.
+    //
+    // Duration is a proportional approximation (auto-graded items get a few
+    // quick minutes each, the written part gets the bulk of the time) —
+    // NOT sourced from an official ФИПИ time allocation, which this app
+    // has no way to verify from here and which is revised periodically
+    // anyway; see estimateExamDurationMin in src/lib/exam-format.ts (same
+    // formula, duplicated here since this script runs outside the Next app).
+    const autoGradedCount = mockExamTaskIds.length - freeformCount;
+    const durationMin = Math.max(20, autoGradedCount * 3 + freeformCount * 40);
+
+    // Only set durationMin when the exam is first created — once it exists,
+    // leave it alone on every later reseed. The exam bank can grow after
+    // seeding (AI top-up for thin/today's topics — see task-bank.ts), and
+    // this script has no visibility into how many tasks got added that
+    // way, so recomputing here on every deploy would silently shrink an
+    // already-grown exam's duration back down to the static seed count.
     const existingMock = await prisma.mockExam.findFirst({ where: { subjectId: dbSubject.id } });
-    const mockExam = existingMock
-      ? existingMock
-      : await prisma.mockExam.create({
-          data: {
-            subjectId: dbSubject.id,
-            title: `Мини-вариант — ${subject.name}`,
-            durationMin: Math.max(20, mockExamTaskIds.length * 6),
-          },
-        });
+    const mockExam =
+      existingMock ??
+      (await prisma.mockExam.create({
+        data: {
+          subjectId: dbSubject.id,
+          title: `Мини-вариант — ${subject.name}`,
+          durationMin,
+        },
+      }));
 
     await prisma.mockExamTask.deleteMany({ where: { mockExamId: mockExam.id } });
     for (const [i, taskId] of mockExamTaskIds.entries()) {

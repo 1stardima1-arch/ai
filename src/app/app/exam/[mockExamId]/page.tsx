@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { startMockExam } from "@/lib/actions/mock-exam";
-import { difficultyForUser, topUpTopic } from "@/lib/task-bank";
+import { difficultyForUser, topUpTopic, emphasizeTopicInExam } from "@/lib/task-bank";
+import { getDailyTasks } from "@/lib/daily";
 import { Button } from "@/components/ui/button";
-import { Timer, ListChecks, Sparkles } from "lucide-react";
+import { Timer, ListChecks, Sparkles, CalendarDays } from "lucide-react";
 
 export default async function MockExamStartPage({
   params,
@@ -31,10 +32,22 @@ export default async function MockExamStartPage({
     select: { id: true },
   });
   const missingTopics = allTopics.filter((t) => !coveredTopicIds.has(t.id));
-  if (missingTopics.length > 0) {
+
+  // If today's daily-rotation topic belongs to this subject, give it more
+  // weight in the exam — a student who just studied it fresh gets to
+  // stress-test it under exam conditions, not just review it in isolation.
+  const daily = await getDailyTasks(userId);
+  const todayTopic = daily.topics.find((t) => t.subjectSlug === mockExam!.subject.slug);
+
+  let regenerated = false;
+  if (missingTopics.length > 0 || todayTopic) {
     const [lo, hi] = await difficultyForUser(userId);
     const difficulty = Math.round((lo + hi) / 2);
     await Promise.all(missingTopics.map((t) => topUpTopic(t.id, difficulty, 3)));
+    if (todayTopic) await emphasizeTopicInExam(todayTopic.id, 3, difficulty);
+    regenerated = true;
+  }
+  if (regenerated) {
     mockExam = await prisma.mockExam.findUnique({
       where: { id: mockExamId },
       include: { subject: true, tasks: { select: { task: { select: { topicId: true } } } } },
@@ -82,6 +95,13 @@ export default async function MockExamStartPage({
           Таймер запустится сразу после старта. Ответы сохраняются по ходу — можно вернуться и продолжить,
           если случайно закроешь вкладку.
         </div>
+
+        {todayTopic && (
+          <div className="mt-3 flex items-start gap-2 rounded-2xl bg-(--color-paper-dim) p-4 text-left text-sm text-(--color-ink-soft)">
+            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-(--color-brand-blue)" />
+            В этом экзамене больше заданий по теме дня — «{todayTopic.name}».
+          </div>
+        )}
 
         <form action={start}>
           <Button type="submit" size="lg" className="mt-7 w-full">

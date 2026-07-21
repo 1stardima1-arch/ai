@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   BookOpen,
+  BookMarked,
   Target,
   LineChart,
   Sparkles,
@@ -17,6 +18,7 @@ import {
 const links = [
   { href: "/app", label: "Дашборд", icon: LayoutDashboard, exact: true },
   { href: "/app/subjects", label: "Предметы", icon: BookOpen },
+  { href: "/app/review", label: "Повторение", icon: BookMarked },
   { href: "/app/mistakes", label: "Разбор ошибок", icon: Target },
   { href: "/app/analytics", label: "Аналитика", icon: LineChart },
   { href: "/app/leaderboard", label: "Рейтинг", icon: Trophy },

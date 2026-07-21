@@ -4,6 +4,7 @@ import { useState } from "react";
 import { submitAttempt } from "@/lib/actions/attempts";
 import { AiChat } from "@/components/app/ai-chat";
 import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
+import { TextAnswer } from "@/components/app/text-answer";
 import { Badge } from "@/components/ui/card";
 import { Button, LinkButton } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, Clock, Keyboard, Camera } from "lucide-react";
@@ -43,13 +44,13 @@ export function PracticeTask({
   const [answer, setAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ isCorrect: boolean | null } | null>(null);
-  const [photoResult, setPhotoResult] = useState<PhotoGradeResult | null>(null);
+  const [aiGradeResult, setAiGradeResult] = useState<PhotoGradeResult | null>(null);
   const [answerMode, setAnswerMode] = useState<"photo" | "text">("photo");
   const [showAi, setShowAi] = useState(false);
   const [startedAt] = useState(() => Date.now());
 
   const options = Array.isArray(task.options) ? (task.options as string[]) : null;
-  const graded = result || photoResult;
+  const graded = result || aiGradeResult;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -134,22 +135,9 @@ export function PracticeTask({
               )}
 
               {answerMode === "photo" ? (
-                <PhotoAnswer taskId={task.id} maxScore={task.maxScore} onGraded={setPhotoResult} />
+                <PhotoAnswer taskId={task.id} maxScore={task.maxScore} onGraded={setAiGradeResult} />
               ) : (
-                !result && (
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <textarea
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      rows={8}
-                      placeholder="Напиши здесь свой ответ…"
-                      className="w-full rounded-2xl border border-black/10 bg-(--color-paper-dim) p-4 text-sm outline-none focus:border-(--color-brand-blue)"
-                    />
-                    <Button type="submit" disabled={!answer.trim() || submitting}>
-                      {submitting ? "Проверяю…" : "Ответить"}
-                    </Button>
-                  </form>
-                )
+                <TextAnswer taskId={task.id} maxScore={task.maxScore} onGraded={setAiGradeResult} />
               )}
             </div>
           ) : (
@@ -185,21 +173,19 @@ export function PracticeTask({
                   <Sparkles className="h-5 w-5" /> Ответ сохранён — такие задания оценивает ИИ-репетитор, не автомат.
                 </div>
               )}
-              {photoResult && (
-                <div className="flex items-center gap-2 rounded-2xl bg-(--color-sky-2) px-4 py-3 text-sm font-bold text-(--color-brand-blue)">
-                  <Sparkles className="h-5 w-5" /> {photoResult.score}/{photoResult.maxScore} баллов — проверено ИИ по фото
-                </div>
-              )}
 
+              {/* aiGradeResult's own score+feedback is already shown inside
+                  PhotoAnswer/TextAnswer above — this is just the task's
+                  official explanation, complementary context either way. */}
               <div className="rounded-2xl bg-(--color-paper-dim) p-5 text-sm leading-relaxed text-(--color-ink-soft)">
                 <div className="mb-1.5 text-xs font-bold uppercase tracking-wide text-(--color-ink)">
-                  {photoResult ? "Обратная связь от ИИ" : "Объяснение"}
+                  Объяснение
                 </div>
-                {photoResult ? photoResult.feedback : task.explanation}
+                {task.explanation}
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {!showAi && !photoResult && (
+                {!showAi && !aiGradeResult && (
                   <Button variant="outline" onClick={() => setShowAi(true)} type="button">
                     <Sparkles className="h-4 w-4" /> Разобрать с ИИ
                   </Button>
@@ -240,7 +226,7 @@ export function PracticeTask({
         </div>
       )}
 
-      {!showAi && !photoResult && (
+      {!showAi && !aiGradeResult && (
         <div className="hidden lg:block">
           <div className="card-surface p-6 text-sm text-(--color-ink-soft)">
             После ответа здесь появится ИИ-репетитор, который разберёт задание вместе с тобой.

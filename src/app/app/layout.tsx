@@ -81,10 +81,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
             <Link
               href="/app/support"
-              className="liquid-glass press-spring flex h-9 w-9 items-center justify-center rounded-full"
+              className="liquid-glass press-spring flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold text-(--color-ink-soft)"
               title="Поддержка"
             >
-              <LifeBuoy className="h-4 w-4 text-(--color-ink-soft)" />
+              <LifeBuoy className="h-4 w-4" />
+              Поддержка
             </Link>
             <Link href="/app/profile" className="liquid-glass press-spring flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3">
               <UserAvatar

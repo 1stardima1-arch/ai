@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import type { Task } from "@prisma/client";
 import { gradeAnswer, isAutoGraded } from "@/lib/grading";
 import { computeStreak, xpForAttempt } from "@/lib/gamification";
-import { gradeAnswerPhoto } from "@/lib/ai";
+import { gradeAnswerPhoto, gradeAnswerText } from "@/lib/ai";
 
 // Shared by submitAttempt and submitAttemptPhoto: writes the Attempt row,
 // updates streak/XP, and checks achievements — the only thing that differs
@@ -159,6 +159,62 @@ export async function submitAttemptPhoto({
     userId,
     task,
     givenAnswer: "[фото ответа]",
+    isCorrect,
+    scoreAwarded: score,
+    aiFeedback: feedback,
+    timeSpentSec,
+    mockExamAttemptId,
+  });
+
+  return {
+    attemptId,
+    score,
+    maxScore: task.maxScore,
+    feedback,
+    xpGain,
+    unlocked,
+  };
+}
+
+// Same as submitAttemptPhoto but for a typed answer — a student who'd
+// rather write than photograph gets the same real score + written
+// feedback instead of the old "saved, on review" placeholder.
+export async function submitAttemptText({
+  taskId,
+  answerText,
+  timeSpentSec = 0,
+  mockExamAttemptId,
+}: {
+  taskId: string;
+  answerText: string;
+  timeSpentSec?: number;
+  mockExamAttemptId?: string;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Не авторизован");
+  const userId = session.user.id;
+
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) throw new Error("Задание не найдено");
+  if (isAutoGraded(task.type)) {
+    throw new Error("Это задание проверяется автоматически");
+  }
+  if (!answerText.trim()) throw new Error("Ответ пустой");
+
+  const { score, feedback } = await gradeAnswerText({
+    taskStatement: task.statement,
+    referenceAnswer: task.correctAnswer,
+    explanation: task.explanation,
+    maxScore: task.maxScore,
+    answerText,
+  });
+
+  const isCorrect = task.maxScore > 0 ? score >= task.maxScore * 0.6 : score > 0;
+
+  const { attemptId, xpGain, unlocked } = await finalizeAttempt({
+    userId,
+    task,
+    givenAnswer: answerText,
     isCorrect,
     scoreAwarded: score,
     aiFeedback: feedback,

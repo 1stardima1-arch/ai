@@ -121,6 +121,31 @@ ${taskStatement}
   return generateText(prompt);
 }
 
+// Shared by gradeAnswerPhoto and gradeAnswerText: pulls {score, feedback}
+// out of the model's JSON response, clamping/defaulting defensively since
+// this is untrusted model output, not a validated API contract.
+function parseScoreFeedback(
+  raw: string,
+  maxScore: number,
+  fallbackFeedback: string
+): { score: number; feedback: string } {
+  let parsed: { score?: unknown; feedback?: unknown };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("ИИ вернул ответ в неожиданном формате при проверке");
+  }
+
+  const scoreNum = typeof parsed.score === "number" ? parsed.score : Number(parsed.score);
+  const score = Number.isFinite(scoreNum) ? Math.max(0, Math.min(maxScore, Math.round(scoreNum))) : 0;
+  const feedback =
+    typeof parsed.feedback === "string" && parsed.feedback.trim()
+      ? parsed.feedback.trim().slice(0, 2000)
+      : fallbackFeedback;
+
+  return { score, feedback };
+}
+
 // Grades a photo of a handwritten answer to a DETAILED_ANSWER/ESSAY task —
 // the ФИПИ-style "часть 2" tasks that have no single string answer to
 // string-compare against. Asks the model to act as an exam expert and
@@ -183,21 +208,73 @@ ${explanation}
   });
 
   const raw = res.choices[0]?.message?.content ?? "{}";
-  let parsed: { score?: unknown; feedback?: unknown };
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error("ИИ вернул ответ в неожиданном формате при проверке фото");
-  }
+  return parseScoreFeedback(
+    raw,
+    maxScore,
+    "Не получилось сформировать обратную связь — попробуй переснять фото почётче и отправить ещё раз."
+  );
+}
 
-  const scoreNum = typeof parsed.score === "number" ? parsed.score : Number(parsed.score);
-  const score = Number.isFinite(scoreNum) ? Math.max(0, Math.min(maxScore, Math.round(scoreNum))) : 0;
-  const feedback =
-    typeof parsed.feedback === "string" && parsed.feedback.trim()
-      ? parsed.feedback.trim().slice(0, 2000)
-      : "Не получилось сформировать обратную связь — попробуй переснять фото почётче и отправить ещё раз.";
+// Same idea as gradeAnswerPhoto, for a student who typed their answer
+// instead of photographing it — no image, otherwise identical rubric and
+// output contract, so both entry points feel the same to the caller.
+export async function gradeAnswerText({
+  taskStatement,
+  referenceAnswer,
+  explanation,
+  maxScore,
+  answerText,
+}: {
+  taskStatement: string;
+  referenceAnswer: string;
+  explanation: string;
+  maxScore: number;
+  answerText: string;
+}): Promise<{ score: number; feedback: string }> {
+  const groq = getClient();
 
-  return { score, feedback };
+  const prompt = `Ты — опытный эксперт ЕГЭ/ОГЭ, проверяющий развёрнутый письменный ответ ученика.
+
+Условие задания:
+"""
+${taskStatement}
+"""
+
+Критерии/эталонный ответ:
+"""
+${referenceAnswer}
+"""
+
+Разбор правильного решения:
+"""
+${explanation}
+"""
+
+Ответ ученика:
+"""
+${answerText}
+"""
+
+Максимальный балл за задание: ${maxScore}.
+
+Сравни ответ ученика с критериями и оцени объективно и справедливо, как настоящий эксперт: не завышай баллы из вежливости и не занижай из излишней строгости. Если ответ вообще не по теме, ставь 0.
+
+Ответь СТРОГО в виде JSON без какого-либо текста до или после:
+{"score": <целое число от 0 до ${maxScore}>, "feedback": "<обратная связь на русском, тепло и по делу, 3-5 предложений: что верно, чего не хватает, как улучшить>"}`;
+
+  const res = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.3,
+    response_format: { type: "json_object" },
+  });
+
+  const raw = res.choices[0]?.message?.content ?? "{}";
+  return parseScoreFeedback(
+    raw,
+    maxScore,
+    "Не получилось сформировать обратную связь — попробуй отправить ещё раз."
+  );
 }
 
 const GENERATABLE_TYPES = ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE"] as const;
