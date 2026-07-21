@@ -100,6 +100,21 @@ async function main() {
     server.close();
   }
 
+  // Bubblewrap generates the native launch splash screen (shown while the WebView is still
+  // loading, before our own animated <AppSplash> in the page itself can render) by just
+  // scaling the app's square launcher icon onto the background color — the icon-on-black-
+  // screen look. Overwrite those with pre-rendered stills of the actual in-app splash design
+  // (siri-orb + "Балл" wordmark + tagline), pre-sized per density so this needs no image
+  // library in CI. See scripts/twa/splash-source.html for the source and how to regenerate.
+  const splashAssetsDir = path.resolve(__dirname, "assets/splash");
+  const densities = ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"];
+  for (const density of densities) {
+    const src = path.join(splashAssetsDir, `${density}.png`);
+    const dest = path.join(targetDir, "app/src/main/res", `drawable-${density}`, "splash.png");
+    fs.copyFileSync(src, dest);
+  }
+  console.log("Replaced native splash.png (all densities) with the custom Балл launch screen.");
+
   // Bubblewrap's template only lists google()/jcenter() as Gradle repositories, but
   // jcenter() has been shut down and androidbrowserhelper is published on Maven Central —
   // without this the build fails to resolve that dependency.
