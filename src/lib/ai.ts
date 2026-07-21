@@ -199,3 +199,110 @@ ${explanation}
 
   return { score, feedback };
 }
+
+const GENERATABLE_TYPES = ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE"] as const;
+export type GeneratableType = (typeof GENERATABLE_TYPES)[number];
+
+export type GeneratedTask = {
+  statement: string;
+  type: GeneratableType;
+  options: string[] | null;
+  correctAnswer: string;
+  explanation: string;
+  difficulty: number;
+};
+
+// Grows a topic's task pool on demand — used when a student runs out of
+// tasks to practice (thin subjects especially) instead of leaving them
+// stuck with a fixed, small bank. Deliberately restricted to auto-graded
+// types only (a single verifiable correctAnswer string): unlike the essay
+// photo-grading above, where a human already wrote the answer and the AI
+// only judges it, here the AI would be inventing both the question AND the
+// answer key with nothing to check it against, which is a real accuracy
+// risk worth being honest about (same trade-off documented in the commit
+// that added this).
+export async function generatePracticeTasks({
+  subjectName,
+  examType,
+  topicName,
+  topicSummary,
+  difficulty,
+  count,
+  exampleTasks,
+}: {
+  subjectName: string;
+  examType: string;
+  topicName: string;
+  topicSummary: string;
+  difficulty: number;
+  count: number;
+  exampleTasks: { statement: string; type: string; options: unknown; correctAnswer: string }[];
+}): Promise<GeneratedTask[]> {
+  const groq = getClient();
+
+  const examples = exampleTasks
+    .slice(0, 3)
+    .map(
+      (t, i) =>
+        `Пример ${i + 1} (тип ${t.type}):\nУсловие: ${t.statement}\n${t.options ? `Варианты: ${JSON.stringify(t.options)}\n` : ""}Ответ: ${t.correctAnswer}`
+    )
+    .join("\n\n");
+
+  const prompt = `Ты составляешь НОВЫЕ тренировочные задания для подготовки к ${examType} по предмету «${subjectName}», тема «${topicName}» (${topicSummary}), в формате открытого банка заданий ФИПИ.
+
+Вот примеры существующих заданий этой темы — ориентируйся на их формат и уровень, но не копируй условия и числа, придумай новые:
+${examples}
+
+Сгенерируй ровно ${count} новых заданий уровня сложности ${difficulty} из 5 (1 — самое лёгкое, 5 — самое сложное для этого предмета и темы). Каждое задание — типа SHORT_ANSWER (краткий ответ текстом/числом) или CHOICE (один вариант из списка 4-5 вариантов) или MULTI_CHOICE (несколько верных вариантов из списка) — выбирай тип, уместный для темы.
+
+КРИТИЧЕСКИ ВАЖНО: перед тем как записать ответ, реши задание сам пошагово в уме и перепроверь вычисления/факт — ответ должен быть гарантированно верным, это будет использовано для автоматической проверки учеников, ошибка в ключе недопустима.
+
+Ответь СТРОГО в виде JSON без текста до/после:
+{"tasks": [{"statement": "...", "type": "SHORT_ANSWER|CHOICE|MULTI_CHOICE", "options": ["..."] или null, "correctAnswer": "...", "explanation": "подробное объяснение решения, 2-4 предложения", "difficulty": ${difficulty}}]}
+
+Для CHOICE/MULTI_CHOICE — options обязателен (4-5 строк), correctAnswer — точный текст верного варианта (или несколько через "; " для MULTI_CHOICE). Для SHORT_ANSWER — options: null, correctAnswer — короткий текст/число.`;
+
+  const res = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.6,
+    response_format: { type: "json_object" },
+  });
+
+  const raw = res.choices[0]?.message?.content ?? "{}";
+  let parsed: { tasks?: unknown };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("ИИ вернул ответ в неожиданном формате при генерации заданий");
+  }
+
+  if (!Array.isArray(parsed.tasks)) return [];
+
+  const valid: GeneratedTask[] = [];
+  for (const t of parsed.tasks) {
+    if (typeof t !== "object" || t === null) continue;
+    const item = t as Record<string, unknown>;
+    const type = item.type as string;
+    if (!GENERATABLE_TYPES.includes(type as GeneratableType)) continue;
+    if (typeof item.statement !== "string" || !item.statement.trim()) continue;
+    if (typeof item.correctAnswer !== "string" || !item.correctAnswer.trim()) continue;
+    if (typeof item.explanation !== "string" || !item.explanation.trim()) continue;
+    const options =
+      Array.isArray(item.options) && item.options.every((o) => typeof o === "string")
+        ? (item.options as string[])
+        : null;
+    if ((type === "CHOICE" || type === "MULTI_CHOICE") && (!options || options.length < 2)) continue;
+
+    valid.push({
+      statement: item.statement.trim(),
+      type: type as GeneratableType,
+      options,
+      correctAnswer: item.correctAnswer.trim(),
+      explanation: item.explanation.trim(),
+      difficulty: Math.max(1, Math.min(5, Number(item.difficulty) || difficulty)),
+    });
+  }
+
+  return valid;
+}

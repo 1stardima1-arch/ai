@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { startMockExam } from "@/lib/actions/mock-exam";
+import { difficultyForUser, topUpTopic } from "@/lib/task-bank";
 import { Button } from "@/components/ui/button";
 import { Timer, ListChecks, Sparkles } from "lucide-react";
 
@@ -12,15 +13,37 @@ export default async function MockExamStartPage({
 }) {
   const { mockExamId } = await params;
   const session = await auth();
+  const userId = session!.user.id;
 
-  const mockExam = await prisma.mockExam.findUnique({
+  let mockExam = await prisma.mockExam.findUnique({
     where: { id: mockExamId },
-    include: { subject: true, tasks: true },
+    include: { subject: true, tasks: { select: { task: { select: { topicId: true } } } } },
   });
   if (!mockExam) notFound();
 
+  // A topic only ever misses the exam if it has zero auto-graded tasks at
+  // all (see the seeding logic in prisma/seed.ts and topUpTopic) — grow
+  // those once here so a thin subject's exam actually covers every topic,
+  // the same "как ФИПИ" shape the auto-graded half is meant to have.
+  const coveredTopicIds = new Set(mockExam.tasks.map((mt) => mt.task.topicId));
+  const allTopics = await prisma.topic.findMany({
+    where: { subjectId: mockExam.subjectId },
+    select: { id: true },
+  });
+  const missingTopics = allTopics.filter((t) => !coveredTopicIds.has(t.id));
+  if (missingTopics.length > 0) {
+    const [lo, hi] = await difficultyForUser(userId);
+    const difficulty = Math.round((lo + hi) / 2);
+    await Promise.all(missingTopics.map((t) => topUpTopic(t.id, difficulty, 3)));
+    mockExam = await prisma.mockExam.findUnique({
+      where: { id: mockExamId },
+      include: { subject: true, tasks: { select: { task: { select: { topicId: true } } } } },
+    });
+    if (!mockExam) notFound();
+  }
+
   const previousAttempts = await prisma.mockExamAttempt.findMany({
-    where: { userId: session!.user.id, mockExamId, status: "completed" },
+    where: { userId, mockExamId, status: "completed" },
     orderBy: { finishedAt: "desc" },
     take: 3,
   });

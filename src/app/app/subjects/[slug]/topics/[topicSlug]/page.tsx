@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Markdown } from "@/components/app/markdown";
+import { GenerateMoreTasks } from "@/components/app/generate-more-tasks";
 import { CheckCircle2, XCircle, Circle, ChevronRight, BookOpen } from "lucide-react";
 
 const typeLabel: Record<string, string> = {
@@ -87,6 +88,9 @@ export default async function TopicPage({
               </Link>
             );
           })}
+        </div>
+        <div className="mt-2.5">
+          <GenerateMoreTasks topicId={topic.id} />
         </div>
       </div>
     </div>

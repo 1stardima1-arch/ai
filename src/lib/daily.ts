@@ -1,10 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { levelFromXp, difficultyBand } from "@/lib/gamification";
+import { topUpTopic } from "@/lib/task-bank";
 
 // "Задания дня": a small set that deterministically rotates every day, so
 // students see fresh tasks daily without any cron — the pick is a pure
 // function of (date, task bank). Everyone gets the same daily set, which
 // keeps the leaderboard fair.
+
+const AUTO_GRADED = ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE", "MATCHING"] as const;
 
 // Day key in Moscow time (UTC+3, no DST) — the audience is RU students.
 export function moscowDayKey(now = new Date()): number {
@@ -24,16 +28,29 @@ function mulberry32(seed: number) {
   };
 }
 
-// Difficulty band (1–5 scale) matching the student's self-assessed level.
-function difficultyRange(prepLevel: string | null): [number, number] {
-  switch (prepLevel) {
-    case "BEGINNER":
-      return [1, 2];
-    case "ADVANCED":
-      return [3, 5];
-    default:
-      return [2, 4];
-  }
+// Finds the single thinnest topic among a set of subjects and asks the
+// task bank to grow it, once. Deliberately bounded to one topic per call —
+// this only runs when the pool is already confirmed too thin for the day,
+// so it pays a one-time AI-generation cost rather than one on every
+// dashboard render once a subject's bank has grown enough.
+async function topUpThinnestTopic(subjectIds: string[], difficulty: number) {
+  const topics = await prisma.topic.findMany({
+    where: { subjectId: { in: subjectIds } },
+    select: { id: true },
+  });
+  if (topics.length === 0) return;
+
+  const counts = await prisma.task.groupBy({
+    by: ["topicId"],
+    where: { subjectId: { in: subjectIds }, type: { in: [...AUTO_GRADED] } },
+    _count: true,
+  });
+  const countByTopic = new Map(counts.map((c) => [c.topicId, c._count]));
+  const thinnest = topics
+    .map((t) => ({ id: t.id, count: countByTopic.get(t.id) ?? 0 }))
+    .sort((a, b) => a.count - b.count)[0];
+
+  await topUpTopic(thinnest.id, difficulty, 4);
 }
 
 export async function getDailyTasks(userId: string, count = 8) {
@@ -41,17 +58,24 @@ export async function getDailyTasks(userId: string, count = 8) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { prepLevel: true, enrollments: { select: { subjectId: true } } },
+    select: {
+      prepLevel: true,
+      xp: true,
+      enrollments: { select: { subject: { select: { id: true, examType: true } } } },
+    },
   });
-  const enrolledIds = user?.enrollments.map((e) => e.subjectId) ?? [];
-  const [minD, maxD] = difficultyRange(user?.prepLevel ?? null);
+  const enrolledIds = user?.enrollments.map((e) => e.subject.id) ?? [];
+  // A student always enrolls within a single exam track (see onboarding),
+  // so the first enrollment's examType is the student's track — every
+  // fallback below stays inside it, so an ОГЭ student never sees ЕГЭ tasks
+  // (or vice versa) just because their subject's bank ran thin.
+  const examType = user?.enrollments[0]?.subject.examType ?? null;
+  const [minD, maxD] = difficultyBand(user?.prepLevel ?? null, levelFromXp(user?.xp ?? 0));
 
-  // Auto-graded tasks only: the daily set should be quickly solvable solo.
-  // Personalised: the student's chosen subjects and a difficulty band for
-  // their level — with graceful fallback if those filters empty the pool.
   const baseWhere: Prisma.TaskWhereInput = {
-    type: { in: ["SHORT_ANSWER", "CHOICE", "MULTI_CHOICE", "MATCHING"] },
+    type: { in: [...AUTO_GRADED] },
   };
+  const examScope: Prisma.TaskWhereInput = examType ? { subject: { examType } } : {};
   const select = {
     id: true,
     number: true,
@@ -78,7 +102,23 @@ export async function getDailyTasks(userId: string, count = 8) {
       orderBy,
     });
   }
+  if (tasks.length < count && enrolledIds.length > 0) {
+    // still thin — grow the bank itself instead of reaching outside the
+    // student's chosen subjects/exam track.
+    await topUpThinnestTopic(enrolledIds, Math.round((minD + maxD) / 2));
+    tasks = await prisma.task.findMany({
+      where: { ...baseWhere, subjectId: { in: enrolledIds } },
+      select,
+      orderBy,
+    });
+  }
   if (tasks.length < count) {
+    // same exam track, any subject — only reached if the student hasn't
+    // enrolled in enough subjects yet to fill a day on their own.
+    tasks = await prisma.task.findMany({ where: { ...baseWhere, ...examScope }, select, orderBy });
+  }
+  if (tasks.length === 0) {
+    // no exam track known at all (enrollment somehow empty) — whole bank.
     tasks = await prisma.task.findMany({ where: baseWhere, select, orderBy });
   }
   if (tasks.length === 0) return { dayKey, tasks: [], topics: [] };

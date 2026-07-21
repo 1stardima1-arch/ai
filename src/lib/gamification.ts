@@ -9,6 +9,20 @@ export function xpProgress(xp: number) {
   return { current: inLevel, needed: XP_PER_LEVEL, percent: Math.round((inLevel / XP_PER_LEVEL) * 100) };
 }
 
+// Task difficulty band (1-5) for a student — starts from their self-reported
+// onboarding level, then genuinely ramps up as their XP level climbs (which
+// itself only grows meaningfully from correct answers — xpForAttempt below
+// gives 8+ XP for a correct answer vs. 2 for a wrong one), so a student who
+// keeps answering correctly gets harder tasks over time without needing a
+// separate accuracy-tracking pass.
+export function difficultyBand(prepLevel: string | null | undefined, xpLevel: number): [number, number] {
+  const base = prepLevel === "BEGINNER" ? 1 : prepLevel === "ADVANCED" ? 3 : 2;
+  const bump = Math.floor((xpLevel - 1) / 3);
+  const lo = Math.min(5, base + bump);
+  const hi = Math.min(5, lo + 2);
+  return [lo, hi];
+}
+
 export function xpForAttempt({
   isCorrect,
   difficulty,
