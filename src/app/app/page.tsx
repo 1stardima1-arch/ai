@@ -48,26 +48,32 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="card-surface p-5">
-          <div className="flex items-center gap-2 text-(--color-ink-soft)">
-            <ListChecks className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-wide">Решено заданий</span>
+        <div className="card-surface press-spring p-5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-brand-blue)/12">
+            <ListChecks className="h-4.5 w-4.5 text-(--color-brand-blue)" />
+          </span>
+          <div className="mt-3 text-xs font-bold uppercase tracking-wide text-(--color-ink-soft)">
+            Решено заданий
           </div>
-          <div className="font-display mt-2 text-3xl font-extrabold">{totalAttempts}</div>
+          <div className="font-display mt-1 text-3xl font-extrabold">{totalAttempts}</div>
         </div>
-        <div className="card-surface p-5">
-          <div className="flex items-center gap-2 text-(--color-ink-soft)">
-            <Target className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-wide">Точность</span>
+        <div className="card-surface press-spring p-5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-brand-green)/12">
+            <Target className="h-4.5 w-4.5 text-(--color-brand-green)" />
+          </span>
+          <div className="mt-3 text-xs font-bold uppercase tracking-wide text-(--color-ink-soft)">
+            Точность
           </div>
-          <div className="font-display mt-2 text-3xl font-extrabold">{accuracy}%</div>
+          <div className="font-display mt-1 text-3xl font-extrabold">{accuracy}%</div>
         </div>
-        <div className="card-surface p-5">
-          <div className="flex items-center gap-2 text-(--color-ink-soft)">
-            <TrendingUp className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-wide">Предметов в работе</span>
+        <div className="card-surface press-spring p-5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-brand-violet)/12">
+            <TrendingUp className="h-4.5 w-4.5 text-(--color-brand-violet)" />
+          </span>
+          <div className="mt-3 text-xs font-bold uppercase tracking-wide text-(--color-ink-soft)">
+            Предметов в работе
           </div>
-          <div className="font-display mt-2 text-3xl font-extrabold">
+          <div className="font-display mt-1 text-3xl font-extrabold">
             {subjects.filter((s) => s.solvedTasks > 0).length}
           </div>
         </div>
