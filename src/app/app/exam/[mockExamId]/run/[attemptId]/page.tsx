@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ExamRunner } from "@/components/app/exam-runner";
+import type { PhotoGradeResult } from "@/components/app/photo-answer";
 import type { TaskDiagram } from "@/lib/task-diagram-types";
 
 export default async function ExamRunPage({
@@ -36,14 +37,20 @@ export default async function ExamRunPage({
   // Rehydrate any already AI-graded answers (aiFeedback is only ever set by
   // submitAttemptPhoto/submitAttemptText) so revisiting a task via the
   // stepper still shows its score instead of resetting to an empty prompt.
-  const initialAiGradeResults: Record<string, { score: number; maxScore: number; feedback: string }> = {};
+  const initialAiGradeResults: Record<string, PhotoGradeResult> = {};
   const taskMaxScoreById = new Map(attempt.mockExam.tasks.map((mt) => [mt.task.id, mt.task.maxScore]));
   for (const a of attempt.attempts) {
     if (a.aiFeedback) {
+      const maxScore = taskMaxScoreById.get(a.taskId) ?? a.scoreAwarded;
       initialAiGradeResults[a.taskId] = {
         score: a.scoreAwarded,
-        maxScore: taskMaxScoreById.get(a.taskId) ?? a.scoreAwarded,
+        maxScore,
         feedback: a.aiFeedback,
+        // Not re-derivable from stored data and not needed here — this only
+        // seeds the stepper's rehydrated view, it never re-fires the XP
+        // toast (that only happens through the live onAiGraded callback).
+        xpGain: 0,
+        isCorrect: maxScore > 0 ? a.scoreAwarded >= maxScore * 0.6 : a.scoreAwarded > 0,
       };
     }
   }

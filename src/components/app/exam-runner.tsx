@@ -5,6 +5,7 @@ import { submitAttempt } from "@/lib/actions/attempts";
 import { finishMockExam } from "@/lib/actions/mock-exam";
 import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { TextAnswer } from "@/components/app/text-answer";
+import { XpToast } from "@/components/app/xp-toast";
 import { TaskDiagram } from "@/components/app/task-diagram";
 import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ export function ExamRunner({
     useState<Record<string, PhotoGradeResult>>(initialAiGradeResults);
   const [timeLeft, setTimeLeft] = useState(remainingSec);
   const [finishing, setFinishing] = useState(false);
+  const [xpToast, setXpToast] = useState({ trigger: 0, xp: 0, isCorrect: null as boolean | null });
 
   const task = tasks[index];
   const allAnswered = answeredIds.size >= tasks.length;
@@ -139,6 +141,7 @@ export function ExamRunner({
         onAiGraded={(result) => {
           setAiGradeResults((p) => ({ ...p, [task.id]: result }));
           setAnsweredIds((prev) => new Set(prev).add(task.id));
+          setXpToast((s) => ({ trigger: s.trigger + 1, xp: result.xpGain, isCorrect: result.isCorrect }));
         }}
       />
 
@@ -167,6 +170,8 @@ export function ExamRunner({
           <CheckCircle2 className="h-4 w-4" /> Все задания отвечены — можно завершать экзамен.
         </div>
       )}
+
+      <XpToast trigger={xpToast.trigger} xp={xpToast.xp} isCorrect={xpToast.isCorrect} />
     </div>
   );
 }

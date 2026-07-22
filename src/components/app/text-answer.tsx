@@ -33,7 +33,13 @@ export function TextAnswer({
     setBusy(true);
     try {
       const res = await submitAttemptText({ taskId, answerText: value, mockExamAttemptId });
-      const graded = { score: res.score, maxScore: res.maxScore, feedback: res.feedback };
+      const graded = {
+        score: res.score,
+        maxScore: res.maxScore,
+        feedback: res.feedback,
+        xpGain: res.xpGain,
+        isCorrect: res.isCorrect,
+      };
       setResult(graded);
       onGraded?.(graded);
     } catch {

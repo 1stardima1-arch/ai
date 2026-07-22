@@ -41,7 +41,13 @@ function compressImage(file: File): Promise<string> {
   });
 }
 
-export type PhotoGradeResult = { score: number; maxScore: number; feedback: string };
+export type PhotoGradeResult = {
+  score: number;
+  maxScore: number;
+  feedback: string;
+  xpGain: number;
+  isCorrect: boolean;
+};
 
 // Camera-first answer flow for DETAILED_ANSWER/ESSAY tasks — the student
 // photographs their handwritten solution instead of retyping it, matching
@@ -86,7 +92,13 @@ export function PhotoAnswer({
         mimeType: "image/jpeg",
         mockExamAttemptId,
       });
-      const graded = { score: res.score, maxScore: res.maxScore, feedback: res.feedback };
+      const graded = {
+        score: res.score,
+        maxScore: res.maxScore,
+        feedback: res.feedback,
+        xpGain: res.xpGain,
+        isCorrect: res.isCorrect,
+      };
       setResult(graded);
       onGraded?.(graded);
     } catch {

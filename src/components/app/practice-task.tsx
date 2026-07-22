@@ -5,6 +5,7 @@ import { submitAttempt } from "@/lib/actions/attempts";
 import { AiChat } from "@/components/app/ai-chat";
 import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { TextAnswer } from "@/components/app/text-answer";
+import { XpToast } from "@/components/app/xp-toast";
 import { TaskDiagram } from "@/components/app/task-diagram";
 import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { Badge } from "@/components/ui/card";
@@ -51,6 +52,7 @@ export function PracticeTask({
   const [answerMode, setAnswerMode] = useState<"photo" | "text">("photo");
   const [showAi, setShowAi] = useState(false);
   const [startedAt] = useState(() => Date.now());
+  const [xpToast, setXpToast] = useState({ trigger: 0, xp: 0, isCorrect: null as boolean | null });
 
   const options = Array.isArray(task.options) ? (task.options as string[]) : null;
   const graded = result || aiGradeResult;
@@ -63,9 +65,15 @@ export function PracticeTask({
       const timeSpentSec = Math.round((Date.now() - startedAt) / 1000);
       const res = await submitAttempt({ taskId: task.id, givenAnswer: answer, timeSpentSec });
       setResult({ isCorrect: res.isCorrect });
+      setXpToast((s) => ({ trigger: s.trigger + 1, xp: res.xpGain, isCorrect: res.isCorrect }));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleAiGraded(graded: PhotoGradeResult) {
+    setAiGradeResult(graded);
+    setXpToast((s) => ({ trigger: s.trigger + 1, xp: graded.xpGain, isCorrect: graded.isCorrect }));
   }
 
   return (
@@ -139,9 +147,9 @@ export function PracticeTask({
               )}
 
               {answerMode === "photo" ? (
-                <PhotoAnswer taskId={task.id} maxScore={task.maxScore} onGraded={setAiGradeResult} />
+                <PhotoAnswer taskId={task.id} maxScore={task.maxScore} onGraded={handleAiGraded} />
               ) : (
-                <TextAnswer taskId={task.id} maxScore={task.maxScore} onGraded={setAiGradeResult} />
+                <TextAnswer taskId={task.id} maxScore={task.maxScore} onGraded={handleAiGraded} />
               )}
             </div>
           ) : (
@@ -237,6 +245,8 @@ export function PracticeTask({
           </div>
         </div>
       )}
+
+      <XpToast trigger={xpToast.trigger} xp={xpToast.xp} isCorrect={xpToast.isCorrect} />
     </div>
   );
 }

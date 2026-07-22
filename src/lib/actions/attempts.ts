@@ -171,6 +171,7 @@ export async function submitAttemptPhoto({
     score,
     maxScore: task.maxScore,
     feedback,
+    isCorrect,
     xpGain,
     unlocked,
   };
@@ -227,6 +228,7 @@ export async function submitAttemptText({
     score,
     maxScore: task.maxScore,
     feedback,
+    isCorrect,
     xpGain,
     unlocked,
   };
