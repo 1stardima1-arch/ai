@@ -35,11 +35,23 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4f6bff",
+  // Matches the app's actual (near-black) background rather than the brand
+  // blue accent — the OS status/nav bar reads this color directly, and the
+  // brand blue there looked like a broken/unstyled system bar sitting on
+  // top of the dark UI instead of blending into it.
+  themeColor: "#0b0b14",
   // Lets the app draw under the notch/home-indicator area instead of
   // leaving a hard browser-chrome band there — required for the
   // safe-area-inset-* CSS vars below to resolve to anything but 0.
   viewportFit: "cover",
+  width: "device-width",
+  initialScale: 1,
+  // Pinch/double-tap zoom has no use in an app-shell layout and, once
+  // triggered, leaves the page pannable/zoomed with content clipped at the
+  // edges — exactly the "crooked screen" look a native app should never
+  // show. Locking scale keeps every screen pixel-stable.
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

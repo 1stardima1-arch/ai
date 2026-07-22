@@ -115,6 +115,40 @@ async function main() {
   }
   console.log("Replaced native splash.png (all densities) with the custom Балл launch screen.");
 
+  // androidbrowserhelper's LauncherActivity renders the splash drawable with
+  // ImageView.ScaleType.CENTER by default — the bitmap at its native pixel
+  // size, centered, with NO scaling at all. Since no single set of
+  // per-density PNGs can pixel-match every real device's screen size, that
+  // always leaves a visible background-color letterbox band on some devices
+  // no matter how the source image is sized. Override the scale type to
+  // CENTER_CROP so the image is scaled up just enough to fill the entire
+  // screen (cropping the excess) — the only mode that guarantees true
+  // edge-to-edge on every device.
+  const launcherActivityPath = path.join(
+    targetDir,
+    "app/src/main/java",
+    ...packageId.split("."),
+    "LauncherActivity.java"
+  );
+  let launcherActivitySrc = fs.readFileSync(launcherActivityPath, "utf8");
+  if (!launcherActivitySrc.includes("getSplashImageScaleType")) {
+    launcherActivitySrc = launcherActivitySrc.replace(
+      /^import android\.os\.Bundle;$/m,
+      'import android.os.Bundle;\nimport android.widget.ImageView;'
+    );
+    launcherActivitySrc = launcherActivitySrc.replace(
+      /\n\}\s*$/,
+      "\n" +
+        "    @Override\n" +
+        "    protected ImageView.ScaleType getSplashImageScaleType() {\n" +
+        "        return ImageView.ScaleType.CENTER_CROP;\n" +
+        "    }\n" +
+        "}\n"
+    );
+    fs.writeFileSync(launcherActivityPath, launcherActivitySrc);
+    console.log("Patched LauncherActivity.java: splash image now scales with CENTER_CROP.");
+  }
+
   // Bubblewrap's template only lists google()/jcenter() as Gradle repositories, but
   // jcenter() has been shut down and androidbrowserhelper is published on Maven Central —
   // without this the build fails to resolve that dependency.

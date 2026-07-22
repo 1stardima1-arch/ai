@@ -27,7 +27,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="liquid-glass glass-sheen fixed inset-x-3 z-40 flex items-center justify-between rounded-full px-2 py-2 lg:hidden"
+      className="liquid-glass glass-sheen fixed inset-x-2 z-40 flex items-center justify-between rounded-full px-1 py-1.5 lg:hidden"
       style={
         {
           viewTransitionName: "app-shell-mobilenav",
@@ -57,11 +57,11 @@ export function MobileNav() {
               whileTap={{ scale: 0.86 }}
               transition={{ type: "spring", stiffness: 500, damping: 25 }}
               className={cn(
-                "relative z-10 flex flex-col items-center gap-0.5 py-2 text-[0.65rem] font-semibold transition-colors duration-300",
+                "relative z-10 flex flex-col items-center gap-0.5 whitespace-nowrap px-0.5 py-1.5 text-[0.58rem] font-semibold transition-colors duration-300",
                 active ? "text-(--color-brand-blue)" : "text-(--color-ink-soft)"
               )}
             >
-              <l.icon className="h-5 w-5" strokeWidth={2.2} />
+              <l.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
               {l.label}
             </motion.span>
           </Link>
