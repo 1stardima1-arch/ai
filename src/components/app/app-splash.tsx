@@ -62,7 +62,7 @@ export function AppSplash() {
           </motion.div>
 
           <motion.p
-            className="relative z-10 mt-2 text-sm text-white/55"
+            className="relative z-10 mt-2 max-w-xs px-8 text-center text-sm text-white/55"
             initial={reduceMotion ? { opacity: 0.55 } : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.7, duration: 0.6 }}

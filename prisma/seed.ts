@@ -80,6 +80,7 @@ async function main() {
           statement: task.statement,
           options: task.options ?? undefined,
           diagram: task.diagram ?? undefined,
+          hints: task.hints ?? undefined,
           correctAnswer: task.correctAnswer,
           explanation: task.explanation,
           difficulty: task.difficulty,

@@ -41,6 +41,7 @@ export default async function PracticeTaskPage({
           statement: task.statement,
           options: task.options,
           diagram: task.diagram as TaskDiagram | null,
+          hints: Array.isArray(task.hints) ? (task.hints as string[]) : null,
           explanation: task.explanation,
           correctAnswer: task.correctAnswer,
           maxScore: task.maxScore,

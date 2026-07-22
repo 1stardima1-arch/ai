@@ -205,6 +205,12 @@ model Task {
   // construction instead of an AI-generated picture that might mislabel a
   // triangle.
   diagram        Json?
+  // Up to 2 progressive hints (string[]?), opt-in per task — present only
+  // for the subjects where hints make sense (math/physics/informatics).
+  // Its presence is what turns on the whole limited-attempts+hints
+  // mechanic for that task in the UI; tasks without it keep the plain
+  // single-shot flow.
+  hints          Json?
   options        Json?
   correctAnswer  String
   explanation    String   @db.Text

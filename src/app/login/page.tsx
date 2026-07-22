@@ -51,7 +51,7 @@ export default async function LoginPage({
       <div className="relative w-full max-w-md">
         <Link
           href="/"
-          className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-bold"
+          className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-bold text-white"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
             <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -60,10 +60,10 @@ export default async function LoginPage({
         </Link>
 
         <div className="mb-6 text-center">
-          <p className="font-display text-lg font-bold">Готовься к ЕГЭ и ОГЭ без репетиторов</p>
+          <p className="font-display text-lg font-bold text-white">Готовься к ЕГЭ и ОГЭ без репетиторов</p>
           <div className="mt-3 flex flex-col items-center gap-1.5">
             {PITCH.map(({ icon: Icon, text }) => (
-              <span key={text} className="flex items-center gap-2 text-sm text-(--color-ink-soft)">
+              <span key={text} className="flex items-center gap-2 text-sm text-white/70">
                 <Icon className="h-4 w-4 shrink-0 text-(--color-brand-blue)" />
                 {text}
               </span>

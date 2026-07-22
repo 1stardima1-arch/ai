@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { submitAttempt } from "@/lib/actions/attempts";
+import { gradeAnswer } from "@/lib/grading";
 import { AiChat } from "@/components/app/ai-chat";
 import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { TextAnswer } from "@/components/app/text-answer";
@@ -10,7 +11,17 @@ import { TaskDiagram } from "@/components/app/task-diagram";
 import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { Badge } from "@/components/ui/card";
 import { Button, LinkButton } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Sparkles, ArrowRight, Clock, Keyboard, Camera } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Sparkles,
+  ArrowRight,
+  Clock,
+  Keyboard,
+  Camera,
+  Lightbulb,
+  RotateCcw,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Task = {
@@ -20,10 +31,13 @@ type Task = {
   statement: string;
   options: unknown;
   diagram: TaskDiagramSpec | null;
+  hints: string[] | null;
   explanation: string;
   correctAnswer: string;
   maxScore: number;
 };
+
+const MAX_ATTEMPTS = 2;
 
 const typeLabel: Record<Task["type"], string> = {
   SHORT_ANSWER: "Краткий ответ",
@@ -54,8 +68,22 @@ export function PracticeTask({
   const [startedAt] = useState(() => Date.now());
   const [xpToast, setXpToast] = useState({ trigger: 0, xp: 0, isCorrect: null as boolean | null });
 
+  // Hints cost an attempt to reveal, out of a shared pool of MAX_ATTEMPTS —
+  // opt-in per task via task.hints (only populated for math/physics/
+  // informatics), everything else keeps the plain single-shot flow.
+  const hintsFeature = Array.isArray(task.hints) && task.hints.length > 0;
+  const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
+  const [revealedHints, setRevealedHints] = useState<string[]>([]);
+  const [wrongTry, setWrongTry] = useState(false);
+
   const options = Array.isArray(task.options) ? (task.options as string[]) : null;
   const graded = result || aiGradeResult;
+
+  async function finalize(givenAnswer: string, timeSpentSec: number) {
+    const res = await submitAttempt({ taskId: task.id, givenAnswer, timeSpentSec });
+    setResult({ isCorrect: res.isCorrect });
+    setXpToast((s) => ({ trigger: s.trigger + 1, xp: res.xpGain, isCorrect: res.isCorrect }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,11 +91,40 @@ export function PracticeTask({
     setSubmitting(true);
     try {
       const timeSpentSec = Math.round((Date.now() - startedAt) / 1000);
-      const res = await submitAttempt({ taskId: task.id, givenAnswer: answer, timeSpentSec });
-      setResult({ isCorrect: res.isCorrect });
-      setXpToast((s) => ({ trigger: s.trigger + 1, xp: res.xpGain, isCorrect: res.isCorrect }));
+
+      if (!hintsFeature) {
+        await finalize(answer, timeSpentSec);
+        return;
+      }
+
+      // Client-side check first — the same pure comparison the server uses
+      // (see src/lib/grading.ts) — so a wrong try-again doesn't create a
+      // premature Attempt row / award XP before the student's real last try.
+      if (gradeAnswer(task, answer)) {
+        await finalize(answer, timeSpentSec);
+        return;
+      }
+      const remaining = attemptsLeft - 1;
+      setAttemptsLeft(remaining);
+      if (remaining > 0) {
+        setWrongTry(true);
+      } else {
+        await finalize(answer, timeSpentSec);
+      }
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleHint() {
+    if (!task.hints || attemptsLeft <= 0 || revealedHints.length >= task.hints.length) return;
+    setWrongTry(false);
+    setRevealedHints((prev) => [...prev, task.hints![prev.length]]);
+    const remaining = attemptsLeft - 1;
+    setAttemptsLeft(remaining);
+    if (remaining <= 0) {
+      const timeSpentSec = Math.round((Date.now() - startedAt) / 1000);
+      await finalize(answer, timeSpentSec);
     }
   }
 
@@ -75,6 +132,43 @@ export function PracticeTask({
     setAiGradeResult(graded);
     setXpToast((s) => ({ trigger: s.trigger + 1, xp: graded.xpGain, isCorrect: graded.isCorrect }));
   }
+
+  const hintsPanel = hintsFeature && !result && (
+    <div className="space-y-2.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-(--color-ink-soft)">
+          Осталось попыток: {attemptsLeft}
+        </span>
+        {task.hints!.map((_, i) =>
+          i < revealedHints.length ? null : (
+            <button
+              key={i}
+              type="button"
+              onClick={handleHint}
+              disabled={attemptsLeft <= 0 || i !== revealedHints.length}
+              className="press-spring inline-flex items-center gap-1.5 rounded-full bg-(--color-sky-2) px-3 py-1.5 text-xs font-bold text-(--color-brand-blue) disabled:opacity-50"
+            >
+              <Lightbulb className="h-3.5 w-3.5" /> Подсказка {i + 1} (−1 попытка)
+            </button>
+          )
+        )}
+      </div>
+      {revealedHints.map((hint, i) => (
+        <div
+          key={i}
+          className="flex items-start gap-2 rounded-2xl bg-(--color-sky-2) px-4 py-3 text-sm text-(--color-brand-blue)"
+        >
+          <Lightbulb className="mt-0.5 h-4 w-4 shrink-0" />
+          {hint}
+        </div>
+      ))}
+      {wrongTry && (
+        <div className="flex items-center gap-2 rounded-2xl bg-(--color-brand-pink)/10 px-4 py-3 text-sm font-semibold text-(--color-brand-pink)">
+          <RotateCcw className="h-4 w-4 shrink-0" /> Неверно, но есть ещё попытка — пробуй снова.
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -114,6 +208,7 @@ export function PracticeTask({
                     </label>
                   ))}
                 </div>
+                {hintsPanel}
                 <Button type="submit" disabled={!answer.trim() || submitting}>
                   {submitting ? "Проверяю…" : "Ответить"}
                 </Button>
@@ -161,6 +256,7 @@ export function PracticeTask({
                   placeholder="Введи ответ"
                   className="w-full rounded-full border border-black/10 bg-(--color-paper-dim) px-5 py-3.5 text-sm outline-none focus:border-(--color-brand-blue)"
                 />
+                {hintsPanel}
                 <Button type="submit" disabled={!answer.trim() || submitting}>
                   {submitting ? "Проверяю…" : "Ответить"}
                 </Button>
