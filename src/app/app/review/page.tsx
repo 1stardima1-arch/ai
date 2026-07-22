@@ -1,19 +1,11 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ReviewBrowser } from "@/components/app/review-browser";
 
 export default async function ReviewPage() {
-  const session = await auth();
-  const userId = session!.user.id;
-
-  const enrollments = await prisma.userSubject.findMany({
-    where: { userId },
-    select: { subjectId: true },
-  });
-  const enrolledIds = enrollments.map((e) => e.subjectId);
-
+  // Deliberately every subject, not just the ones the student enrolled in —
+  // unlike "Предметы" (their active study plan), this page's whole point is
+  // "any topic, right now", per the copy below.
   const subjects = await prisma.subject.findMany({
-    where: enrolledIds.length > 0 ? { id: { in: enrolledIds } } : undefined,
     orderBy: { order: "asc" },
     select: {
       id: true,

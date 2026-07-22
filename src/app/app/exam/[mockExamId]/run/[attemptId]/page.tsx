@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ExamRunner } from "@/components/app/exam-runner";
+import type { TaskDiagram } from "@/lib/task-diagram-types";
 
 export default async function ExamRunPage({
   params,
@@ -59,6 +60,7 @@ export default async function ExamRunPage({
         type: mt.task.type,
         statement: mt.task.statement,
         options: mt.task.options as string[] | null,
+        diagram: mt.task.diagram as TaskDiagram | null,
         maxScore: mt.task.maxScore,
         answered: answeredTaskIds.has(mt.task.id),
       }))}

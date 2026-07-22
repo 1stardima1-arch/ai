@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PracticeTask } from "@/components/app/practice-task";
+import type { TaskDiagram } from "@/lib/task-diagram-types";
 
 export default async function PracticeTaskPage({
   params,
@@ -39,6 +40,7 @@ export default async function PracticeTaskPage({
           type: task.type,
           statement: task.statement,
           options: task.options,
+          diagram: task.diagram as TaskDiagram | null,
           explanation: task.explanation,
           correctAnswer: task.correctAnswer,
           maxScore: task.maxScore,

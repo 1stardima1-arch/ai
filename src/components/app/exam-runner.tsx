@@ -5,6 +5,8 @@ import { submitAttempt } from "@/lib/actions/attempts";
 import { finishMockExam } from "@/lib/actions/mock-exam";
 import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { TextAnswer } from "@/components/app/text-answer";
+import { TaskDiagram } from "@/components/app/task-diagram";
+import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Timer, CheckCircle2, Flag } from "lucide-react";
@@ -15,6 +17,7 @@ type ExamTask = {
   type: "SHORT_ANSWER" | "CHOICE" | "MULTI_CHOICE" | "MATCHING" | "DETAILED_ANSWER" | "ESSAY";
   statement: string;
   options: string[] | null;
+  diagram: TaskDiagramSpec | null;
   maxScore: number;
   answered: boolean;
 };
@@ -192,6 +195,7 @@ function TaskCard({
 
   return (
     <div className="card-surface p-6 sm:p-8">
+      {task.diagram && <TaskDiagram spec={task.diagram} />}
       <p className="whitespace-pre-wrap text-[1.05rem] leading-relaxed">{task.statement}</p>
 
       <div className="mt-6 space-y-4">

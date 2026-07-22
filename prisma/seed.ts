@@ -79,6 +79,7 @@ async function main() {
           type: task.type,
           statement: task.statement,
           options: task.options ?? undefined,
+          diagram: task.diagram ?? undefined,
           correctAnswer: task.correctAnswer,
           explanation: task.explanation,
           difficulty: task.difficulty,

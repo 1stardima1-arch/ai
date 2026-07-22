@@ -5,6 +5,8 @@ import { submitAttempt } from "@/lib/actions/attempts";
 import { AiChat } from "@/components/app/ai-chat";
 import { PhotoAnswer, type PhotoGradeResult } from "@/components/app/photo-answer";
 import { TextAnswer } from "@/components/app/text-answer";
+import { TaskDiagram } from "@/components/app/task-diagram";
+import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { Badge } from "@/components/ui/card";
 import { Button, LinkButton } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Sparkles, ArrowRight, Clock, Keyboard, Camera } from "lucide-react";
@@ -16,6 +18,7 @@ type Task = {
   type: "SHORT_ANSWER" | "CHOICE" | "MULTI_CHOICE" | "MATCHING" | "DETAILED_ANSWER" | "ESSAY";
   statement: string;
   options: unknown;
+  diagram: TaskDiagramSpec | null;
   explanation: string;
   correctAnswer: string;
   maxScore: number;
@@ -74,6 +77,7 @@ export function PracticeTask({
             <Badge>{typeLabel[task.type]}</Badge>
           </div>
 
+          {task.diagram && <TaskDiagram spec={task.diagram} />}
           <p className="whitespace-pre-wrap text-[1.05rem] leading-relaxed">{task.statement}</p>
 
           {options ? (

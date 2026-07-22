@@ -199,7 +199,12 @@ model Task {
   number         Int
   type           TaskType
   statement      String   @db.Text
-  imageUrl       String?
+  // Structured geometry-figure spec for tasks that need one (see
+  // src/lib/task-diagram-types.ts) — rendered as inline themed SVG rather
+  // than a static image, so it's crisp at any size and correct by
+  // construction instead of an AI-generated picture that might mislabel a
+  // triangle.
+  diagram        Json?
   options        Json?
   correctAnswer  String
   explanation    String   @db.Text

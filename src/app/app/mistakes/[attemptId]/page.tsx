@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { AiChat } from "@/components/app/ai-chat";
+import { TaskDiagram } from "@/components/app/task-diagram";
+import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { LinkButton } from "@/components/ui/button";
 import { XCircle, CheckCircle2, RotateCcw } from "lucide-react";
 
@@ -31,6 +33,7 @@ export default async function MistakeDetailPage({
         </div>
 
         <div className="card-surface p-6 sm:p-8">
+          {attempt.task.diagram && <TaskDiagram spec={attempt.task.diagram as TaskDiagramSpec} />}
           <p className="whitespace-pre-wrap text-[1.05rem] leading-relaxed">{attempt.task.statement}</p>
 
           <div className="mt-6 space-y-3">
