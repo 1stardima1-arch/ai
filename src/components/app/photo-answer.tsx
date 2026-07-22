@@ -6,12 +6,38 @@ import { submitAttemptPhoto } from "@/lib/actions/attempts";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2, RotateCcw, Sparkles } from "lucide-react";
 
-function fileToDataUrl(file: File): Promise<string> {
+// A phone camera photo is routinely 3-8 MB — sent as-is, base64-encoded,
+// that alone can blow past Next's Server Action body limit, and even where
+// it doesn't, it's a slow, flaky upload on mobile data for no benefit (the
+// vision model doesn't need full sensor resolution to read handwriting).
+// Downscale to a sane max dimension and re-encode as JPEG before it ever
+// leaves the device — this is the fix, the raised server limit is just
+// headroom for whatever this doesn't shrink enough.
+const MAX_DIMENSION = 1600;
+const JPEG_QUALITY = 0.82;
+
+function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
+    const img = document.createElement("img");
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+      const width = Math.round(img.width * scale);
+      const height = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas 2D context unavailable"));
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Не удалось открыть фото"));
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -48,16 +74,16 @@ export function PhotoAnswer({
 
     setError(null);
     setResult(null);
-    const dataUrl = await fileToDataUrl(file);
-    setPreview(dataUrl);
     setBusy(true);
     try {
+      const dataUrl = await compressImage(file);
+      setPreview(dataUrl);
       const commaIdx = dataUrl.indexOf(",");
       const base64 = dataUrl.slice(commaIdx + 1);
       const res = await submitAttemptPhoto({
         taskId,
         imageBase64: base64,
-        mimeType: file.type || "image/jpeg",
+        mimeType: "image/jpeg",
         mockExamAttemptId,
       });
       const graded = { score: res.score, maxScore: res.maxScore, feedback: res.feedback };
