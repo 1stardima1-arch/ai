@@ -54,6 +54,14 @@ html {
      that bounce is one of the strongest "you're in a browser tab" tells,
      since native/standalone apps don't do it. */
   overscroll-behavior-y: none;
+  /* Restricts touch panning to vertical only, at the gesture level rather
+     than by clipping overflow — an earlier attempt used overflow-x: hidden
+     here, which made real Android WebView fall back to slow main-thread
+     scrolling instead of the fast compositor path. touch-action doesn't
+     touch the box/compositing model at all, so it blocks the sideways
+     drag (any card list could be dragged left/right and stay shifted,
+     like it was never a fixed native layout) without that cost. */
+  touch-action: pan-y;
 }
 
 body {
@@ -61,6 +69,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   overscroll-behavior-y: none;
+  touch-action: pan-y;
 }
 
 /* @theme inline registers these as plain CSS custom properties on :root,
@@ -313,6 +322,35 @@ body {
     inset 0 -1px 0 rgba(0, 0, 0, 0.2),
     0 2px 8px rgba(0, 0, 0, 0.25),
     0 16px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* A brighter, more saturated take on .liquid-glass for the one piece of
+   chrome that's on screen 100% of the time (the bottom tab bar) — heavier
+   blur, a hint of brand-color tint so it reads as "glass over something
+   colorful" rather than plain frosted white/black, and a stronger glow so
+   it lifts off the page instead of blending into it. Layer it after
+   .liquid-glass on the same element (same specificity, later wins) so it
+   only overrides what needs to be brighter. */
+.liquid-glass-vivid {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(120, 145, 255, 0.14));
+  -webkit-backdrop-filter: blur(28px) saturate(2.4);
+  backdrop-filter: blur(28px) saturate(2.4);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    0 6px 20px rgba(79, 107, 255, 0.16),
+    0 24px 56px rgba(11, 11, 18, 0.16);
+}
+
+.dark .liquid-glass-vivid {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(139, 111, 255, 0.16));
+  border-color: rgba(255, 255, 255, 0.26);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 6px 24px rgba(79, 107, 255, 0.22),
+    0 24px 56px rgba(0, 0, 0, 0.5);
 }
 
 /* passing specular reflection — the "mirror" sheen of liquid glass.

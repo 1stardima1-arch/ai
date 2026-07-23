@@ -27,7 +27,7 @@ export function MobileNav() {
 
   return (
     <nav
-      className="liquid-glass glass-sheen fixed inset-x-2 z-40 flex items-center justify-between rounded-full px-1 py-1.5 lg:hidden"
+      className="liquid-glass liquid-glass-vivid glass-sheen fixed inset-x-2 z-40 flex items-center justify-between rounded-full px-1 py-1.5 lg:hidden"
       style={
         {
           viewTransitionName: "app-shell-mobilenav",
