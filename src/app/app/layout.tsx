@@ -15,17 +15,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [user, allSubjects] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { name: true, image: true, avatarKey: true, xp: true, streak: true, prepLevel: true },
-    }),
-    prisma.subject.findMany({
-      orderBy: { order: "asc" },
-      select: { id: true, name: true, examType: true, color: true, icon: true },
-    }),
-  ]);
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, image: true, avatarKey: true, xp: true, streak: true, prepLevel: true },
+  });
   if (!user) redirect("/login");
+
+  // <Onboarding> only ever reads `subjects` during the one-time setup flow
+  // (needsSetup === true) — every other navigation was paying for a full
+  // subjects table scan just to hand it data nothing on the page uses.
+  const allSubjects = user.prepLevel
+    ? []
+    : await prisma.subject.findMany({
+        orderBy: { order: "asc" },
+        select: { id: true, name: true, examType: true, color: true, icon: true },
+      });
 
   const level = levelFromXp(user.xp);
   const progress = xpProgress(user.xp);
@@ -33,7 +37,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-(--color-paper)">
       <Onboarding needsSetup={!user.prepLevel} subjects={allSubjects} />
-      <div className="app-glow-frame" aria-hidden />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
         <div className="blob blob-pink" />

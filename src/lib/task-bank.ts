@@ -170,34 +170,55 @@ export async function rotateExamRepresentatives(subjectId: string) {
     select: { id: true, topicId: true, type: true },
   });
   const currentByTaskId = new Map(currentTasks.map((t) => [t.id, t]));
+
+  // Fetch every candidate task for every relevant topic in one query
+  // (instead of one findMany per MockExamTask row, which turned this into
+  // up to ~20 sequential DB round-trips on every single visit to the exam
+  // start page — the whole point of the page is to be a fast "here's your
+  // exam, go" screen), then do all the picking in memory.
+  const topicIds = [...new Set(currentTasks.map((t) => t.topicId))];
+  const allCandidates = await prisma.task.findMany({
+    where: { topicId: { in: topicIds }, type: { in: [...AUTO_GRADED] } },
+    select: { id: true, topicId: true },
+    orderBy: { id: "asc" },
+  });
+  const candidatesByTopic = new Map<string, string[]>();
+  for (const c of allCandidates) {
+    const list = candidatesByTopic.get(c.topicId) ?? [];
+    list.push(c.id);
+    candidatesByTopic.set(c.topicId, list);
+  }
+
   // A topic can already have more than one of its tasks in the exam (see
   // emphasizeTopicInExam) — never rotate a slot onto a task some OTHER
   // slot in this same exam already uses, or the (mockExamId, taskId)
   // unique constraint rejects the swap.
   const usedTaskIds = new Set(mockExam.tasks.map((t) => t.taskId));
-
   const bucket = twoDayBucketKey();
+  const updates: { id: string; taskId: string }[] = [];
 
   for (const mt of mockExam.tasks) {
     const current = currentByTaskId.get(mt.taskId);
     if (!current || !(AUTO_GRADED as readonly string[]).includes(current.type)) continue;
 
-    const candidates = (
-      await prisma.task.findMany({
-        where: { topicId: current.topicId, type: { in: [...AUTO_GRADED] } },
-        select: { id: true },
-        orderBy: { id: "asc" },
-      })
-    ).filter((c) => c.id === mt.taskId || !usedTaskIds.has(c.id));
+    const candidates = (candidatesByTopic.get(current.topicId) ?? []).filter(
+      (id) => id === mt.taskId || !usedTaskIds.has(id)
+    );
     if (candidates.length < 2) continue;
 
     const rand = mulberry32(bucket ^ hashString(current.topicId));
-    const pick = candidates[Math.floor(rand() * candidates.length)];
-    if (pick.id === mt.taskId) continue;
+    const pickId = candidates[Math.floor(rand() * candidates.length)];
+    if (pickId === mt.taskId) continue;
 
-    await prisma.mockExamTask.update({ where: { id: mt.id }, data: { taskId: pick.id } });
+    updates.push({ id: mt.id, taskId: pickId });
     usedTaskIds.delete(mt.taskId);
-    usedTaskIds.add(pick.id);
+    usedTaskIds.add(pickId);
+  }
+
+  if (updates.length > 0) {
+    await prisma.$transaction(
+      updates.map((u) => prisma.mockExamTask.update({ where: { id: u.id }, data: { taskId: u.taskId } }))
+    );
   }
 }
 

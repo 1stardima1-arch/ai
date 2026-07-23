@@ -297,6 +297,12 @@ model MockExamAttempt {
   mockExam MockExam  @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
   attempts Attempt[]
 
+  // Postgres doesn't auto-index foreign key columns (unlike MySQL) — every
+  // lookup here (resume-in-progress check, previous-attempts list, the
+  // exam-rotation in-progress check) was a full table scan with no index
+  // at all beyond the primary key.
+  @@index([userId, mockExamId, status])
+  @@index([mockExamId, status])
   @@map("mock_exam_attempts")
 }
 
