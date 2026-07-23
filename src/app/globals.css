@@ -54,11 +54,6 @@ html {
      that bounce is one of the strongest "you're in a browser tab" tells,
      since native/standalone apps don't do it. */
   overscroll-behavior-y: none;
-  /* Safety net: any element that ever creeps past the viewport width (a
-     stray fixed width, an unwrapped flex row, ...) must never turn into a
-     horizontally pannable page — that reads as the whole app being
-     crooked/shifted, not just one broken component. */
-  overflow-x: hidden;
 }
 
 body {
@@ -66,7 +61,6 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   overscroll-behavior-y: none;
-  overflow-x: hidden;
 }
 
 /* @theme inline registers these as plain CSS custom properties on :root,
