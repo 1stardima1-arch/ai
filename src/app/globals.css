@@ -211,6 +211,18 @@ body {
   animation: drift-a 20s ease-in-out infinite reverse;
 }
 
+/* Warm fourth blob — a purely cool (blue/pink/green) palette reads a little
+   clinical on the dark theme; a soft amber glow low on the screen is what
+   makes the ambient field feel warm/cozy instead of just colorful. */
+.blob-amber {
+  background: radial-gradient(circle, #fde68a, transparent 70%);
+  width: 30vw;
+  height: 30vw;
+  bottom: 12%;
+  left: 6%;
+  animation: drift-b 22s ease-in-out infinite reverse;
+}
+
 @keyframes drift-a {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(3%, 4%) scale(1.06); }
@@ -225,7 +237,8 @@ body {
   .dreamy-hero-bg::before,
   .blob-blue,
   .blob-pink,
-  .blob-green {
+  .blob-green,
+  .blob-amber {
     animation: none;
   }
 }
@@ -383,6 +396,59 @@ body {
 
 @keyframes siri-rotate {
   to { --siri-angle: 360deg; }
+}
+
+/* A dim, always-on version of the same rainbow ring — the bright .siri-glow
+   above is a one-off "AI moment" flash; this is the persistent "app has AI
+   inside it" frame the user asked for, subtle enough to sit behind every
+   screen without competing with the content on top of it. */
+.app-glow-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.app-glow-frame::before,
+.app-glow-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 3px;
+  background: conic-gradient(
+    from var(--siri-angle),
+    #ff8a5c,
+    #ff5f9e,
+    #b06bff,
+    #5a8dff,
+    #64d8ff,
+    #7dffb2,
+    #ff8a5c
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: siri-rotate 16s linear infinite;
+}
+
+.app-glow-frame::before {
+  opacity: 0.65;
+}
+
+/* wide blurred copy underneath = a soft aura bleeding inward from the edge,
+   same trick as .siri-glow, just dim enough to sit behind every screen */
+.app-glow-frame::after {
+  padding: 14px;
+  filter: blur(14px);
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-glow-frame::before,
+  .app-glow-frame::after {
+    animation: none;
+  }
 }
 
 /* ambient color field behind the app so glass panels have something to refract */

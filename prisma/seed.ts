@@ -131,16 +131,22 @@ async function main() {
     // this script has no visibility into how many tasks got added that
     // way, so recomputing here on every deploy would silently shrink an
     // already-grown exam's duration back down to the static seed count.
+    // The title, unlike duration, is safe to keep in sync every reseed —
+    // it's just a label, no downstream state depends on its exact text.
+    const examTitle = `Пробный экзамен — ${subject.name}`;
     const existingMock = await prisma.mockExam.findFirst({ where: { subjectId: dbSubject.id } });
     const mockExam =
       existingMock ??
       (await prisma.mockExam.create({
         data: {
           subjectId: dbSubject.id,
-          title: `Мини-вариант — ${subject.name}`,
+          title: examTitle,
           durationMin,
         },
       }));
+    if (existingMock && existingMock.title !== examTitle) {
+      await prisma.mockExam.update({ where: { id: mockExam.id }, data: { title: examTitle } });
+    }
 
     await prisma.mockExamTask.deleteMany({ where: { mockExamId: mockExam.id } });
     for (const [i, taskId] of mockExamTaskIds.entries()) {

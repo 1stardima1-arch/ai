@@ -245,6 +245,50 @@ function shapeContent(d: TaskDiagramSpec) {
         </>
       );
     }
+    case "graph": {
+      const cx = 120, cy = 100, r = 70;
+      const n = d.nodes.length;
+      const pos = new Map(
+        d.nodes.map((label, i) => {
+          // Start at the top and go clockwise so small graphs read naturally.
+          const angle = -Math.PI / 2 + (2 * Math.PI * i) / n;
+          return [label, { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }];
+        })
+      );
+      return (
+        <>
+          {d.edges.map((e, i) => {
+            const a = pos.get(e.from);
+            const b = pos.get(e.to);
+            if (!a || !b) return null;
+            const midX = (a.x + b.x) / 2;
+            const midY = (a.y + b.y) / 2;
+            return (
+              <g key={i}>
+                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={STROKE} strokeWidth="1.75" strokeOpacity="0.7" />
+                {e.weight && (
+                  <>
+                    <circle cx={midX} cy={midY} r="9" fill="var(--color-paper)" />
+                    <Label x={midX} y={midY + 4}>{e.weight}</Label>
+                  </>
+                )}
+              </g>
+            );
+          })}
+          {d.nodes.map((label) => {
+            const p = pos.get(label)!;
+            return (
+              <g key={label}>
+                <circle cx={p.x} cy={p.y} r="14" fill="var(--color-paper)" stroke={STROKE} strokeWidth="2" />
+                <text x={p.x} y={p.y + 5} fontSize="13" fontWeight="700" fill={STROKE} textAnchor="middle">
+                  {label}
+                </text>
+              </g>
+            );
+          })}
+        </>
+      );
+    }
   }
 }
 

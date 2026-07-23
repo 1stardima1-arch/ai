@@ -33,10 +33,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-(--color-paper)">
       <Onboarding needsSetup={!user.prepLevel} subjects={allSubjects} />
+      <div className="app-glow-frame" aria-hidden />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
         <div className="blob blob-pink" />
         <div className="blob blob-green" />
+        <div className="blob blob-amber" />
       </div>
       <div className="mx-auto flex w-full max-w-7xl gap-6 px-4 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] sm:px-6">
         <aside
