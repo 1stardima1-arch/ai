@@ -326,30 +326,36 @@ body {
 
 /* A brighter, more saturated take on .liquid-glass for the one piece of
    chrome that's on screen 100% of the time (the bottom tab bar) — heavier
-   blur, a hint of brand-color tint so it reads as "glass over something
-   colorful" rather than plain frosted white/black, and a stronger glow so
+   blur and a hint of brand-color tint so it reads as "glass over something
+   colorful" rather than plain frosted white/black, plus a stronger glow so
    it lifts off the page instead of blending into it. Layer it after
    .liquid-glass on the same element (same specificity, later wins) so it
-   only overrides what needs to be brighter. */
+   only overrides what needs to be brighter.
+   The background layer is deliberately fairly OPAQUE, not just blurred —
+   this bar sits right on top of bright gradient CTA cards, and a high
+   saturate() with a mostly-transparent base amplifies whatever color is
+   behind it (first version washed the tab labels out completely against
+   the blue "продолжить подготовку" card). Keeping the panel's own tint
+   dominant is what makes it read as "glass", not "a window". */
 .liquid-glass-vivid {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(120, 145, 255, 0.14));
-  -webkit-backdrop-filter: blur(28px) saturate(2.4);
-  backdrop-filter: blur(28px) saturate(2.4);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(219, 227, 255, 0.62));
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.15),
     0 6px 20px rgba(79, 107, 255, 0.16),
     0 24px 56px rgba(11, 11, 18, 0.16);
 }
 
 .dark .liquid-glass-vivid {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(139, 111, 255, 0.16));
-  border-color: rgba(255, 255, 255, 0.26);
+  background: linear-gradient(135deg, rgba(32, 34, 62, 0.74), rgba(46, 27, 76, 0.68));
+  border-color: rgba(255, 255, 255, 0.22);
   box-shadow:
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
-    0 6px 24px rgba(79, 107, 255, 0.22),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 6px 24px rgba(79, 107, 255, 0.2),
     0 24px 56px rgba(0, 0, 0, 0.5);
 }
 

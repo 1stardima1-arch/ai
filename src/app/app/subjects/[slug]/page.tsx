@@ -30,7 +30,7 @@ export default async function SubjectPage({
         <div className="flex items-center gap-4">
           <span
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
-            style={{ background: `${subject.color}1a` }}
+            style={{ background: `${subject.color}1a`, color: subject.color }}
           >
             <SubjectIcon icon={subject.icon} className="h-7 w-7" />
           </span>
@@ -52,7 +52,8 @@ export default async function SubjectPage({
           <Link
             key={t.id}
             href={`/app/subjects/${subject.slug}/topics/${t.slug}`}
-            className="card-surface flex items-center justify-between gap-4 p-5 transition-colors hover:border-black/10"
+            className="card-surface flex items-center justify-between gap-4 border-l-[3px] p-5 transition-colors hover:border-black/10"
+            style={{ borderLeftColor: subject.color }}
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

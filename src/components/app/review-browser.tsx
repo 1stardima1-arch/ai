@@ -60,7 +60,7 @@ export function ReviewBrowser({ subjects }: { subjects: Subject[] }) {
             <div className="mb-3 flex items-center gap-2.5">
               <span
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: `${s.color}1a` }}
+                style={{ background: `${s.color}1a`, color: s.color }}
               >
                 <SubjectIcon icon={s.icon} className="h-4 w-4" />
               </span>
@@ -71,9 +71,13 @@ export function ReviewBrowser({ subjects }: { subjects: Subject[] }) {
                 <Link
                   key={t.id}
                   href={`/app/subjects/${s.slug}/topics/${t.slug}`}
-                  className="card-surface press-spring flex items-center gap-3 p-4"
+                  className="card-surface press-spring flex items-center gap-3 border-l-[3px] p-4"
+                  style={{ borderLeftColor: s.color }}
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-sky-2) text-(--color-brand-blue)">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: `${s.color}1a`, color: s.color }}
+                  >
                     <BookOpen className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">

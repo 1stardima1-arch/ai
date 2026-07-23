@@ -21,12 +21,13 @@ export default async function SubjectsPage() {
           <Link
             key={s.id}
             href={`/app/subjects/${s.slug}`}
-            className="card-surface group flex flex-col gap-4 p-6 transition-transform hover:-translate-y-1 hover:shadow-(--shadow-lift)"
+            className="card-surface group flex flex-col gap-4 border-l-[3px] p-6 transition-transform hover:-translate-y-1 hover:shadow-(--shadow-lift)"
+            style={{ borderLeftColor: s.color }}
           >
             <div className="flex items-start justify-between">
               <span
                 className="flex h-12 w-12 items-center justify-center rounded-2xl"
-                style={{ background: `${s.color}1a` }}
+                style={{ background: `${s.color}1a`, color: s.color }}
               >
                 <SubjectIcon icon={s.icon} className="h-6 w-6" />
               </span>

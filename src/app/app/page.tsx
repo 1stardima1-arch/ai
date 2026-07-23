@@ -120,7 +120,7 @@ export default async function DashboardPage() {
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: `${t.subject.color}1a` }}
+                  style={{ background: `${t.subject.color}1a`, color: t.subject.color }}
                 >
                   <SubjectIcon icon={t.subject.icon} className="h-4.5 w-4.5" />
                 </span>
@@ -192,7 +192,7 @@ export default async function DashboardPage() {
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: `${s.color}1a` }}
+                  style={{ background: `${s.color}1a`, color: s.color }}
                 >
                   <SubjectIcon icon={s.icon} className="h-4.5 w-4.5" />
                 </span>
