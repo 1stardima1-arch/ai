@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { startMockExam } from "@/lib/actions/mock-exam";
-import { difficultyForUser, topUpTopic, emphasizeTopicInExam } from "@/lib/task-bank";
+import { difficultyForUser, topUpTopic, emphasizeTopicInExam, rotateExamRepresentatives } from "@/lib/task-bank";
 import { getDailyTasks } from "@/lib/daily";
 import { Button } from "@/components/ui/button";
 import { Timer, ListChecks, Sparkles, CalendarDays } from "lucide-react";
@@ -47,6 +47,11 @@ export default async function MockExamStartPage({
     if (todayTopic) await emphasizeTopicInExam(todayTopic.id, 3, difficulty);
     regenerated = true;
   }
+  // Swaps which task represents each topic every 2 days (when a topic has
+  // more than one candidate) — a no-op whenever anyone is mid-attempt on
+  // this exam, so it never disrupts an in-progress run.
+  await rotateExamRepresentatives(mockExam.subjectId);
+  regenerated = true;
   if (regenerated) {
     mockExam = await prisma.mockExam.findUnique({
       where: { id: mockExamId },

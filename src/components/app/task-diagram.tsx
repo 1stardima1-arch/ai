@@ -181,6 +181,70 @@ function shapeContent(d: TaskDiagramSpec) {
         </>
       );
     }
+    case "series-circuit": {
+      const leftX = 50, rightX = 190, topY = 60, bottomY = 150;
+      const battTop = 95, battBottom = 115;
+      return (
+        <>
+          {/* bottom wire */}
+          <line x1={leftX} y1={bottomY} x2={rightX} y2={bottomY} stroke={STROKE} strokeWidth="2" />
+          {/* right wire */}
+          <line x1={rightX} y1={bottomY} x2={rightX} y2={topY} stroke={STROKE} strokeWidth="2" />
+          {/* top wire, right of resistor */}
+          <line x1={rightX} y1={topY} x2="150" y2={topY} stroke={STROKE} strokeWidth="2" />
+          {/* resistor box */}
+          <rect x="110" y={topY - 9} width="40" height="18" fill="none" stroke={STROKE} strokeWidth="2" />
+          {/* top wire, left of resistor */}
+          <line x1="110" y1={topY} x2={leftX} y2={topY} stroke={STROKE} strokeWidth="2" />
+          {/* left wire, split around the battery symbol */}
+          <line x1={leftX} y1={topY} x2={leftX} y2={battTop} stroke={STROKE} strokeWidth="2" />
+          <line x1={leftX} y1={battBottom} x2={leftX} y2={bottomY} stroke={STROKE} strokeWidth="2" />
+          {/* battery symbol: long thin plate (+), short thick plate (−) */}
+          <line x1={leftX - 12} y1={battTop} x2={leftX + 12} y2={battTop} stroke={STROKE} strokeWidth="2" />
+          <line x1={leftX - 7} y1={battBottom} x2={leftX + 7} y2={battBottom} stroke={STROKE} strokeWidth="4" />
+          {d.resistanceLabel && <Label x="130" y={topY - 16}>{`R = ${d.resistanceLabel}`}</Label>}
+          {d.voltageLabel && <Label x={leftX - 24} y={(battTop + battBottom) / 2 + 4}>{`U = ${d.voltageLabel}`}</Label>}
+          {d.currentLabel && <Label x={rightX + 20} y={(topY + bottomY) / 2}>{`I = ${d.currentLabel}`}</Label>}
+        </>
+      );
+    }
+    case "ray-refraction": {
+      const P = { x: 120, y: 120 };
+      const normalTop = { x: 120, y: 45 };
+      const incidentStart = { x: 55, y: 60 };
+      const reflectedEnd = { x: 185, y: 60 };
+      return (
+        <>
+          <line x1="30" y1={P.y} x2="210" y2={P.y} stroke={STROKE} strokeWidth="2" />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <line
+              key={i}
+              x1={30 + i * 32}
+              y1={P.y}
+              x2={30 + i * 32 - 10}
+              y2={P.y + 12}
+              stroke={STROKE}
+              strokeWidth="1.5"
+              strokeOpacity="0.5"
+            />
+          ))}
+          <line
+            x1={normalTop.x}
+            y1={normalTop.y}
+            x2={P.x}
+            y2={P.y}
+            stroke={STROKE}
+            strokeWidth="1.5"
+            strokeDasharray="4 3"
+            strokeOpacity="0.6"
+          />
+          <line x1={incidentStart.x} y1={incidentStart.y} x2={P.x} y2={P.y} stroke={ACCENT} strokeWidth="2" />
+          <line x1={P.x} y1={P.y} x2={reflectedEnd.x} y2={reflectedEnd.y} stroke={ACCENT} strokeWidth="2" />
+          {d.angle1Label && <Label x={P.x - 30} y="75">{d.angle1Label}</Label>}
+          {d.angle2Label && <Label x={P.x + 30} y="75">{d.angle2Label}</Label>}
+        </>
+      );
+    }
   }
 }
 

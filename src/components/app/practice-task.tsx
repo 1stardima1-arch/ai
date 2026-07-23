@@ -21,6 +21,7 @@ import {
   Camera,
   Lightbulb,
   RotateCcw,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -216,6 +217,22 @@ export function PracticeTask({
             )
           ) : isFreeform(task.type) ? (
             <div className="mt-6">
+              {!graded && (
+                <div className="mb-4 flex items-start gap-2.5 rounded-2xl bg-(--color-sky-2) p-4 text-sm text-(--color-ink-soft)">
+                  <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-(--color-brand-blue)" />
+                  <div>
+                    <div className="mb-1 font-bold text-(--color-ink)">
+                      Как оформить решение — за это тоже снимают баллы
+                    </div>
+                    <ul className="list-disc space-y-0.5 pl-4">
+                      <li>Пиши по шагам: дано → решение → ответ, а не только итоговое число.</li>
+                      <li>Сначала запиши формулу, потом подставляй числа — не наоборот.</li>
+                      <li>В доказательствах называй теорему или признак, на который опираешься.</li>
+                      <li>Не забывай единицы измерения и чёткий вывод в конце.</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
               {!graded && (
                 <div className="mb-3 inline-flex gap-1 rounded-full bg-(--color-paper-dim) p-1 text-xs font-bold">
                   <button

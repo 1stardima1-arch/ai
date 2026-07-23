@@ -813,6 +813,7 @@ export const extraSubjects: SubjectSeed[] = [
             explanation: "По закону Ома I = U/R = 12/4 = 3 А.",
             difficulty: 1,
             hints: ["Закон Ома: I = U/R.", "Подставь U = 12 В и R = 4 Ом."],
+            diagram: { kind: "series-circuit", voltageLabel: "12 В", resistanceLabel: "4 Ом" },
           },
           {
             number: 5,
@@ -823,6 +824,7 @@ export const extraSubjects: SubjectSeed[] = [
             explanation: "P = I²·R = 2² × 5 = 4 × 5 = 20 Вт.",
             difficulty: 2,
             hints: ["Используй формулу мощности P = I²·R.", "Подставь I = 2 А (не забудь возвести в квадрат) и R = 5 Ом."],
+            diagram: { kind: "series-circuit", resistanceLabel: "5 Ом", currentLabel: "2 А" },
           },
         ],
       },
@@ -872,6 +874,7 @@ export const extraSubjects: SubjectSeed[] = [
             explanation: "По закону отражения угол отражения всегда равен углу падения: 35°.",
             difficulty: 1,
             hints: ["Закон отражения: угол падения равен углу отражения.", "Угол отражения — точно такое же число, как угол падения."],
+            diagram: { kind: "ray-refraction", angle1Label: "35°" },
           },
           {
             number: 7,
@@ -882,6 +885,7 @@ export const extraSubjects: SubjectSeed[] = [
             explanation: "Угол между лучами делится поровну между углом падения и углом отражения (они равны): 80° / 2 = 40°.",
             difficulty: 2,
             hints: ["Угол между лучами — это сумма угла падения и угла отражения, а они равны между собой.", "Раздели 80° поровну на два равных угла."],
+            diagram: { kind: "ray-refraction" },
           },
         ],
       },

@@ -16,4 +16,6 @@ export type TaskDiagram =
   | { kind: "circle"; radiusLabel?: string }
   | { kind: "rectangle"; widthLabel?: string; heightLabel?: string }
   | { kind: "rhombus"; d1Label?: string; d2Label?: string }
-  | { kind: "square"; sideLabel?: string };
+  | { kind: "square"; sideLabel?: string }
+  | { kind: "series-circuit"; voltageLabel?: string; resistanceLabel?: string; currentLabel?: string }
+  | { kind: "ray-refraction"; angle1Label?: string; angle2Label?: string };

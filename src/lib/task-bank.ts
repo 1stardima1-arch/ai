@@ -120,6 +120,93 @@ export async function topUpTopic(topicId: string, difficulty: number, count = 4)
   return created;
 }
 
+// Day key in Moscow time, bucketed to a 2-day window — changes exactly
+// every 2 days, same deterministic-pure-function approach as daily.ts's
+// moscowDayKey (no cron/background job needed: it's just recomputed on
+// each request).
+function twoDayBucketKey(now = new Date()): number {
+  const msk = new Date(now.getTime() + 3 * 3600_000);
+  const epochDay = Math.floor(msk.getTime() / 86_400_000);
+  return Math.floor(epochDay / 2);
+}
+
+// mulberry32 — tiny deterministic PRNG (mirrors daily.ts's copy; kept
+// separate since this module has no dependency on daily.ts).
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// A mock exam's task list (MockExamTask) is one shared table per subject,
+// not per-student — so swapping which task fills a topic's slot is only
+// safe when nobody is mid-attempt on that exam anywhere (mid-swap would
+// desync an in-progress run from the task it already showed the student).
+// When a topic has more than one eligible auto-graded task, this rotates
+// which one represents that topic every 2 days, so retaking the mock exam
+// over time actually surfaces different tasks instead of the same static
+// pick forever — never removes the topic's slot entirely, only swaps its
+// occupant.
+export async function rotateExamRepresentatives(subjectId: string) {
+  const mockExam = await prisma.mockExam.findFirst({
+    where: { subjectId },
+    select: { id: true, tasks: { select: { id: true, taskId: true, order: true } } },
+  });
+  if (!mockExam) return;
+
+  const anyInProgress = await prisma.mockExamAttempt.findFirst({
+    where: { mockExamId: mockExam.id, status: "in_progress" },
+    select: { id: true },
+  });
+  if (anyInProgress) return;
+
+  const currentTasks = await prisma.task.findMany({
+    where: { id: { in: mockExam.tasks.map((t) => t.taskId) } },
+    select: { id: true, topicId: true, type: true },
+  });
+  const currentByTaskId = new Map(currentTasks.map((t) => [t.id, t]));
+  // A topic can already have more than one of its tasks in the exam (see
+  // emphasizeTopicInExam) — never rotate a slot onto a task some OTHER
+  // slot in this same exam already uses, or the (mockExamId, taskId)
+  // unique constraint rejects the swap.
+  const usedTaskIds = new Set(mockExam.tasks.map((t) => t.taskId));
+
+  const bucket = twoDayBucketKey();
+
+  for (const mt of mockExam.tasks) {
+    const current = currentByTaskId.get(mt.taskId);
+    if (!current || !(AUTO_GRADED as readonly string[]).includes(current.type)) continue;
+
+    const candidates = (
+      await prisma.task.findMany({
+        where: { topicId: current.topicId, type: { in: [...AUTO_GRADED] } },
+        select: { id: true },
+        orderBy: { id: "asc" },
+      })
+    ).filter((c) => c.id === mt.taskId || !usedTaskIds.has(c.id));
+    if (candidates.length < 2) continue;
+
+    const rand = mulberry32(bucket ^ hashString(current.topicId));
+    const pick = candidates[Math.floor(rand() * candidates.length)];
+    if (pick.id === mt.taskId) continue;
+
+    await prisma.mockExamTask.update({ where: { id: mt.id }, data: { taskId: pick.id } });
+    usedTaskIds.delete(mt.taskId);
+    usedTaskIds.add(pick.id);
+  }
+}
+
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  return h;
+}
+
 // Gives a topic extra weight in its subject's mock exam — used to make
 // today's daily-rotation topic more represented in the exam, so a student
 // who just studied it fresh can stress-test it under exam conditions, not

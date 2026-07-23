@@ -10,6 +10,7 @@ import { TaskDiagram } from "@/components/app/task-diagram";
 import type { TaskDiagram as TaskDiagramSpec } from "@/lib/task-diagram-types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ClipboardList } from "lucide-react";
 import { Timer, CheckCircle2, Flag } from "lucide-react";
 
 type ExamTask = {
@@ -232,6 +233,20 @@ function TaskCard({
           </div>
         ) : isFreeform ? (
           <div>
+            <div className="mb-4 flex items-start gap-2.5 rounded-2xl bg-(--color-sky-2) p-4 text-sm text-(--color-ink-soft)">
+              <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-(--color-brand-blue)" />
+              <div>
+                <div className="mb-1 font-bold text-(--color-ink)">
+                  Как оформить решение — за это тоже снимают баллы
+                </div>
+                <ul className="list-disc space-y-0.5 pl-4">
+                  <li>Пиши по шагам: дано → решение → ответ, а не только итоговое число.</li>
+                  <li>Сначала запиши формулу, потом подставляй числа — не наоборот.</li>
+                  <li>В доказательствах называй теорему или признак, на который опираешься.</li>
+                  <li>Не забывай единицы измерения и чёткий вывод в конце.</li>
+                </ul>
+              </div>
+            </div>
             <div className="mb-3 inline-flex gap-1 rounded-full bg-(--color-paper-dim) p-1 text-xs font-bold">
               <button
                 type="button"
