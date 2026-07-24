@@ -19,8 +19,16 @@ import { IntroParticles, StaggerTitle } from "@/components/app/intro-fx";
 export function AppSplash() {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
-  const [visible, setVisible] = useState(true);
-  const eligible = pathname === "/login" || pathname?.startsWith("/app") === true;
+  // Frozen at mount, from whatever the very first pathname was — must never
+  // react to later client-side navigation. The root layout stays mounted
+  // across navigations (that's what makes this a one-shot cold-start splash
+  // in the first place), so re-deriving `eligible` from the live pathname
+  // meant landing on an ineligible route (marketing "/", "/privacy", ...)
+  // left `visible` stuck at its initial `true` — then the moment the user
+  // navigated into /login or /app, eligible flipped true and the splash
+  // suddenly played mid-session instead of only on a real cold start.
+  const [eligible] = useState(() => pathname === "/login" || pathname?.startsWith("/app") === true);
+  const [visible, setVisible] = useState(eligible);
 
   useEffect(() => {
     if (!eligible) return;
@@ -29,7 +37,10 @@ export function AppSplash() {
     // before the dashboard appears.
     const timer = setTimeout(() => setVisible(false), reduceMotion ? 250 : 3000);
     return () => clearTimeout(timer);
-  }, [reduceMotion, eligible]);
+    // eligible is frozen at mount (see above) and reduceMotion doesn't need
+    // to restart the timer once it's already running.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AnimatePresence>
