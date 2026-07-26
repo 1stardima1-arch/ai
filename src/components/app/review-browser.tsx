@@ -71,7 +71,7 @@ export function ReviewBrowser({ subjects }: { subjects: Subject[] }) {
                 <Link
                   key={t.id}
                   href={`/app/subjects/${s.slug}/topics/${t.slug}`}
-                  className="card-surface press-spring flex items-center gap-3 border-l-[3px] p-4"
+                  className="card-surface press-spring flex min-w-0 items-center gap-3 border-l-[3px] p-4"
                   style={{ borderLeftColor: s.color }}
                 >
                   <span
@@ -81,7 +81,7 @@ export function ReviewBrowser({ subjects }: { subjects: Subject[] }) {
                     <BookOpen className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{t.name}</div>
+                    <div className="line-clamp-2 text-sm font-semibold">{t.name}</div>
                     <div className="truncate text-xs text-(--color-ink-soft)">
                       {t._count.tasks} {taskWord(t._count.tasks)} · теория
                     </div>

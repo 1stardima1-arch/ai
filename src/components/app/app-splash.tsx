@@ -32,10 +32,12 @@ export function AppSplash() {
 
   useEffect(() => {
     if (!eligible) return;
-    // Slow, deliberate on purpose — this is the one moment that should read
-    // as "a real app is starting up", not a flash students barely register
-    // before the dashboard appears.
-    const timer = setTimeout(() => setVisible(false), reduceMotion ? 250 : 3000);
+    // Deliberately brief — this is the one moment that should read as "a
+    // real app is starting up", not a wait. The native OS launch screen
+    // (see scripts/twa/generate.js) already burns its own time getting the
+    // WebView ready, so everything in here fires close to immediately on
+    // mount rather than staggering in over a couple of seconds.
+    const timer = setTimeout(() => setVisible(false), reduceMotion ? 250 : 2000);
     return () => clearTimeout(timer);
     // eligible is frozen at mount (see above) and reduceMotion doesn't need
     // to restart the timer once it's already running.
@@ -60,14 +62,14 @@ export function AppSplash() {
             className="siri-orb relative h-20 w-20"
             initial={reduceMotion ? false : { scale: 0.35, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           />
 
           <motion.div
             className="relative z-10 mt-7"
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.3 }}
+            transition={{ delay: 0.1, duration: 0.25 }}
           >
             <StaggerTitle text="Балл" className="font-display text-4xl font-extrabold" />
           </motion.div>
@@ -76,7 +78,7 @@ export function AppSplash() {
             className="relative z-10 mt-2 max-w-xs px-8 text-center text-sm text-white/55"
             initial={reduceMotion ? { opacity: 0.55 } : { opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.7, duration: 0.6 }}
+            transition={{ delay: 0.45, duration: 0.4 }}
           >
             ИИ-репетитор для ЕГЭ и ОГЭ — понятная теория и разбор ошибок
           </motion.p>
