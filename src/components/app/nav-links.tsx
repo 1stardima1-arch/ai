@@ -13,6 +13,7 @@ import {
   Sparkles,
   Trophy,
   User,
+  ShieldCheck,
 } from "lucide-react";
 
 const links = [
@@ -26,18 +27,21 @@ const links = [
   { href: "/app/profile", label: "Профиль", icon: User },
 ];
 
+const adminLink = { href: "/app/admin", label: "Админ-панель", icon: ShieldCheck, exact: false };
+
 // motion.create(Link) instead of relying on CSS :active — pointer-event
 // driven press feedback is reliable on real touch devices even for a fast
 // tap that immediately triggers navigation, unlike :active which mobile
 // browsers frequently skip in that exact situation.
 const MotionLink = motion.create(Link);
 
-export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function NavLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin?: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? [adminLink, ...links] : links;
 
   return (
     <nav className="flex flex-col gap-1">
-      {links.map((l) => {
+      {items.map((l) => {
         const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
         return (
           <MotionLink

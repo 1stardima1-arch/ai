@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getDashboardOverview } from "@/lib/stats";
@@ -7,10 +8,16 @@ import { nextExamDate, daysUntil } from "@/lib/exam-date";
 import { SubjectIcon } from "@/lib/subject-icon";
 import { LinkButton } from "@/components/ui/button";
 import { AnimatedBar } from "@/components/motion/animated-bar";
+import { isAdminSession } from "@/lib/admin";
 import { ArrowRight, Target, TrendingUp, ListChecks, CalendarDays, CheckCircle2, Hourglass, BookOpen } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
+  // The admin account has no separate login flow of its own — it's the same
+  // username+password form every student uses. What makes it "a different
+  // interface" is this: the moment that specific account lands on the
+  // dashboard, it's bounced straight into the admin overview instead.
+  if (isAdminSession(session)) redirect("/app/admin");
   const userId = session!.user.id;
   const [{ totalAttempts, accuracy, subjects, recentAttempts }, daily, enrollments] = await Promise.all([
     getDashboardOverview(userId),

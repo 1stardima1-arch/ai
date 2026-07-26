@@ -11,6 +11,7 @@ import {
   Target,
   Trophy,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 
 const links = [
@@ -22,8 +23,11 @@ const links = [
   { href: "/app/ai", label: "ИИ", icon: Sparkles },
 ];
 
-export function MobileNav() {
+const adminLink = { href: "/app/admin", label: "Админ", icon: ShieldCheck, exact: false };
+
+export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? [adminLink, ...links] : links;
 
   return (
     <nav
@@ -35,7 +39,7 @@ export function MobileNav() {
         } as React.CSSProperties
       }
     >
-      {links.map((l) => {
+      {items.map((l) => {
         const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
         return (
           <Link

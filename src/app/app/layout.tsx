@@ -9,11 +9,13 @@ import { Onboarding } from "@/components/app/onboarding";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { levelFromXp, xpProgress } from "@/lib/gamification";
 import { AnimatedBar } from "@/components/motion/animated-bar";
+import { isAdminSession } from "@/lib/admin";
 import { Sparkles, Flame, LifeBuoy } from "lucide-react";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+  const isAdmin = isAdminSession(session);
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -24,19 +26,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // <Onboarding> only ever reads `subjects` during the one-time setup flow
   // (needsSetup === true) — every other navigation was paying for a full
   // subjects table scan just to hand it data nothing on the page uses.
-  const allSubjects = user.prepLevel
-    ? []
-    : await prisma.subject.findMany({
+  // The admin account never picks an exam/subjects, so it's exempt —
+  // otherwise every fresh admin login would be stuck behind a student
+  // setup wizard before ever reaching the admin dashboard.
+  const needsSetup = !isAdmin && !user.prepLevel;
+  const allSubjects = needsSetup
+    ? await prisma.subject.findMany({
         orderBy: { order: "asc" },
         select: { id: true, name: true, examType: true, color: true, icon: true },
-      });
+      })
+    : [];
 
   const level = levelFromXp(user.xp);
   const progress = xpProgress(user.xp);
 
   return (
     <div className="min-h-screen bg-(--color-paper)">
-      <Onboarding needsSetup={!user.prepLevel} subjects={allSubjects} />
+      <Onboarding needsSetup={needsSetup} subjects={allSubjects} />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
         <div className="blob blob-pink" />
@@ -59,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
 
           <div className="mt-8 flex-1">
-            <NavLinks />
+            <NavLinks isAdmin={isAdmin} />
           </div>
 
           <div className="rounded-2xl bg-(--color-paper-dim) p-4">
@@ -109,7 +115,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </div>
 
-      <MobileNav />
+      <MobileNav isAdmin={isAdmin} />
     </div>
   );
 }
