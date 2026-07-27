@@ -6,7 +6,7 @@
 //
 // Reads config from env vars (all have sane defaults, see .github/workflows/build-apk.yml):
 //   WEB_MANIFEST_URL   - full URL to the deployed app's manifest.json
-//   TWA_PACKAGE_ID     - Android package id, e.g. ru.ball.app
+//   TWA_PACKAGE_ID     - Android package id, e.g. ru.pulsecoach.app
 //   TWA_DIR            - output directory for the generated Android project
 //   ANDROID_KEY_ALIAS  - alias name inside the signing keystore
 //   APP_VERSION_CODE   - integer, must increase on every Play/RuStore upload
@@ -44,9 +44,9 @@ function startStaticServer(rootDir) {
 
 async function main() {
   const webManifestUrl =
-    process.env.WEB_MANIFEST_URL || "https://ai-proid.vercel.app/manifest.json";
+    process.env.WEB_MANIFEST_URL || "https://pulse-coach.vercel.app/manifest.json";
   const targetDir = path.resolve(process.env.TWA_DIR || "./android-twa");
-  const packageId = process.env.TWA_PACKAGE_ID || "ru.ball.app";
+  const packageId = process.env.TWA_PACKAGE_ID || "ru.pulsecoach.app";
   const keyAlias = process.env.ANDROID_KEY_ALIAS || "ball";
   const versionCode = Number(process.env.APP_VERSION_CODE || 1);
   const versionName = process.env.APP_VERSION_NAME || "1.0.0";
@@ -104,7 +104,7 @@ async function main() {
   // loading, before our own animated <AppSplash> in the page itself can render) by just
   // scaling the app's square launcher icon onto the background color — the icon-on-black-
   // screen look. Overwrite those with pre-rendered stills of the actual in-app splash design
-  // (siri-orb + "Балл" wordmark + tagline), pre-sized per density so this needs no image
+  // (siri-orb + "Pulse Coach" wordmark + tagline), pre-sized per density so this needs no image
   // library in CI. See scripts/twa/splash-source.html for the source and how to regenerate.
   const splashAssetsDir = path.resolve(__dirname, "assets/splash");
   const densities = ["mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"];
@@ -113,7 +113,7 @@ async function main() {
     const dest = path.join(targetDir, "app/src/main/res", `drawable-${density}`, "splash.png");
     fs.copyFileSync(src, dest);
   }
-  console.log("Replaced native splash.png (all densities) with the custom Балл launch screen.");
+  console.log("Replaced native splash.png (all densities) with the custom Pulse Coach launch screen.");
 
   // androidbrowserhelper's LauncherActivity renders the splash drawable with
   // ImageView.ScaleType.CENTER by default — the bitmap at its native pixel

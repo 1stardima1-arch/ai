@@ -18,9 +18,9 @@ async function sendResetEmail(to: string, url: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || "Балл <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM_EMAIL || "Pulse Coach <onboarding@resend.dev>",
         to,
-        subject: "Восстановление пароля — Балл",
+        subject: "Восстановление пароля — Pulse Coach",
         text: `Сброс пароля: ${url}\n\nСсылка действует час. Если это не ты — просто проигнорируй письмо.`,
         html: `<p>Нажми, чтобы задать новый пароль: <a href="${url}">${url}</a></p><p style="color:#888;font-size:13px">Ссылка действует час. Если это не ты — просто проигнорируй письмо.</p>`,
       }),

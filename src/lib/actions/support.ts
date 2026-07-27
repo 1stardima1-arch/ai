@@ -26,7 +26,7 @@ async function notifyByEmail(opts: { to: string; replyTo?: string | null; subjec
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || "Балл <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM_EMAIL || "Pulse Coach <onboarding@resend.dev>",
         to: opts.to,
         ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
         subject: opts.subject,
@@ -56,7 +56,7 @@ export async function sendSupportMessage(formData: FormData): Promise<SupportRes
   await notifyByEmail({
     to: SUPPORT_EMAIL,
     replyTo: session.user.email,
-    subject: `Поддержка «Балл» — ${who}`,
+    subject: `Поддержка «Pulse Coach» — ${who}`,
     body: `${who} (${session.user.email ?? "без почты"}) написал(а) в поддержку:\n\n${body}\n\nОтветить можно прямо в приложении: /app/admin/support`,
   });
 
@@ -71,14 +71,14 @@ export async function sendAdminReply(formData: FormData): Promise<SupportResult>
 
   const targetUserId = (formData.get("userId") as string | null) ?? "";
   const body = (formData.get("message") as string | null)?.trim() ?? "";
-  if (!targetUserId) return { ok: false, error: "Не указан студент." };
+  if (!targetUserId) return { ok: false, error: "Не указан пользователь." };
   if (body.length < 1) return { ok: false, error: "Напиши сообщение." };
 
   const student = await prisma.user.findUnique({
     where: { id: targetUserId },
     select: { email: true, name: true },
   });
-  if (!student) return { ok: false, error: "Студент не найден." };
+  if (!student) return { ok: false, error: "Пользователь не найден." };
 
   await prisma.supportMessage.create({
     data: { userId: targetUserId, fromAdmin: true, body },
@@ -87,7 +87,7 @@ export async function sendAdminReply(formData: FormData): Promise<SupportResult>
   if (student.email) {
     await notifyByEmail({
       to: student.email,
-      subject: "Ответ от поддержки «Балл»",
+      subject: "Ответ от поддержки «Pulse Coach»",
       body,
     });
   }

@@ -59,7 +59,7 @@ if (process.env.RESEND_API_KEY) {
   providers.push(
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.RESEND_FROM_EMAIL || "Балл <onboarding@resend.dev>",
+      from: process.env.RESEND_FROM_EMAIL || "Pulse Coach <onboarding@resend.dev>",
       async sendVerificationRequest({ identifier: to, url, provider }) {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -70,7 +70,7 @@ if (process.env.RESEND_API_KEY) {
           body: JSON.stringify({
             from: provider.from,
             to,
-            subject: "Вход в Балл",
+            subject: "Вход в Pulse Coach",
             html: verificationEmailHtml(url),
             text: verificationEmailText(url),
           }),

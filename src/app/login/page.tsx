@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { signIn } from "@/auth";
-import { Sparkles, BookOpenCheck, Wand2, TrendingUp } from "lucide-react";
+import { Activity, HeartPulse, Watch, TrendingUp } from "lucide-react";
 import { AuthPanel } from "@/components/app/auth-panel";
 import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
 const PITCH = [
-  { icon: BookOpenCheck, text: "Теория и задания ФИПИ по ЕГЭ и ОГЭ" },
-  { icon: Wand2, text: "ИИ-репетитор разбирает твои ошибки" },
-  { icon: TrendingUp, text: "Прогресс, серии дней и рейтинг" },
+  { icon: HeartPulse, text: "Готовность, сон и восстановление каждый день" },
+  { icon: Watch, text: "Garmin, Polar, Athyx — реальная синхронизация" },
+  { icon: TrendingUp, text: "ИИ-тренер объясняет каждое решение плана" },
 ];
 
 const providers = {
@@ -54,13 +54,13 @@ export default async function LoginPage({
           className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-bold text-white"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
-            <Sparkles className="h-4 w-4" strokeWidth={2.5} />
+            <Activity className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          Балл
+          Pulse Coach
         </Link>
 
         <div className="mb-6 text-center">
-          <p className="font-display text-lg font-bold text-white">Готовься к ЕГЭ и ОГЭ без репетиторов</p>
+          <p className="font-display text-lg font-bold text-white">ИИ-тренер, который знает твоё тело</p>
           <div className="mt-3 flex flex-col items-center gap-1.5">
             {PITCH.map(({ icon: Icon, text }) => (
               <span key={text} className="flex items-center gap-2 text-sm text-white/70">

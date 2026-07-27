@@ -4,7 +4,7 @@ import { ForgotPasswordForm } from "@/components/app/forgot-password-form";
 import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
-export const metadata = { title: "Восстановление пароля — Балл" };
+export const metadata = { title: "Восстановление пароля — Pulse Coach" };
 
 export default function ForgotPasswordPage() {
   return (
@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Балл
+            Pulse Coach
           </Link>
 
           <div className="card-surface p-8">

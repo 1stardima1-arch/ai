@@ -1,6 +1,6 @@
 name: Build Android APK (TWA)
 
-# Wraps the deployed web app (https://ai-proid.vercel.app) in a Trusted Web
+# Wraps the deployed web app (https://pulse-coach.vercel.app) in a Trusted Web
 # Activity — a real, installable Android app that opens the live site. Run manually from
 # the Actions tab ("Run workflow"). Requires four repo secrets to be set first:
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS
@@ -12,7 +12,7 @@ on:
       webManifestUrl:
         description: "Full URL to the deployed app's manifest.json"
         required: false
-        default: "https://ai-proid.vercel.app/manifest.json"
+        default: "https://pulse-coach.vercel.app/manifest.json"
       versionCode:
         description: "Android versionCode — must increase on every RuStore/Play upload"
         required: false
@@ -78,7 +78,7 @@ jobs:
         env:
           NODE_PATH: ${{ github.workspace }}/.bubblewrap-tools/node_modules
           WEB_MANIFEST_URL: ${{ inputs.webManifestUrl }}
-          TWA_PACKAGE_ID: ru.ball.app
+          TWA_PACKAGE_ID: ru.pulsecoach.app
           TWA_DIR: android-twa
           ANDROID_KEY_ALIAS: ${{ steps.keystore.outputs.alias }}
           APP_VERSION_CODE: ${{ inputs.versionCode }}
@@ -167,11 +167,11 @@ jobs:
       - name: Upload APK (install this on your phone)
         uses: actions/upload-artifact@v4
         with:
-          name: ball-app-apk
+          name: pulsecoach-app-apk
           path: android-twa/app-release-signed.apk
 
       - name: Upload AAB (for a future RuStore/Play submission)
         uses: actions/upload-artifact@v4
         with:
-          name: ball-app-aab
+          name: pulsecoach-app-aab
           path: android-twa/app-release-bundle.aab

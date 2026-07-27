@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Activity } from "lucide-react";
 import { Container } from "@/components/ui/card";
 
 export function SiteFooter() {
@@ -9,13 +9,13 @@ export function SiteFooter() {
         <div>
           <div className="flex items-center gap-2 font-display text-lg font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
-              <Sparkles className="h-4 w-4" strokeWidth={2.5} />
+              <Activity className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Балл
+            Pulse Coach
           </div>
           <p className="mt-3 max-w-xs text-sm text-(--color-ink-soft)">
-            Подготовка к ЕГЭ и ОГЭ без репетиторов: реальные задания, понятная теория
-            и ИИ, который помогает разобраться.
+            ИИ-тренер для эндуранс- и силовых атлетов: готовность, тренировки, сон и питание
+            под твои реальные данные.
           </p>
         </div>
 
@@ -24,8 +24,8 @@ export function SiteFooter() {
             <div className="mb-3 text-sm font-semibold">Продукт</div>
             <ul className="space-y-2 text-sm text-(--color-ink-soft)">
               <li><Link href="/#features" className="hover:text-(--color-ink)">Возможности</Link></li>
-              <li><Link href="/#subjects" className="hover:text-(--color-ink)">Предметы</Link></li>
-              <li><Link href="/#ai" className="hover:text-(--color-ink)">ИИ-репетитор</Link></li>
+              <li><Link href="/#devices" className="hover:text-(--color-ink)">Устройства</Link></li>
+              <li><Link href="/#how" className="hover:text-(--color-ink)">Как работает</Link></li>
             </ul>
           </div>
           <div>
@@ -39,8 +39,8 @@ export function SiteFooter() {
       </Container>
 
       <Container className="mt-10 flex flex-col gap-2 border-t border-black/5 pt-6 text-xs text-(--color-ink-soft) sm:flex-row sm:items-center sm:justify-between">
-        <span>© {new Date().getFullYear()} Балл. Все права защищены.</span>
-        <span>Задания составлены в формате открытого банка ФИПИ, в учебных целях.</span>
+        <span>© {new Date().getFullYear()} Pulse Coach. Все права защищены.</span>
+        <span>Не заменяет консультацию врача — при травмах и симптомах болезни обратись к специалисту.</span>
       </Container>
     </footer>
   );

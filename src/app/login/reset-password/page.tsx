@@ -4,7 +4,7 @@ import { ResetPasswordForm } from "@/components/app/reset-password-form";
 import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
-export const metadata = { title: "Новый пароль — Балл" };
+export const metadata = { title: "Новый пароль — Pulse Coach" };
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -23,7 +23,7 @@ export default async function ResetPasswordPage({
             <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Балл
+            Pulse Coach
           </Link>
 
           <div className="card-surface p-8">

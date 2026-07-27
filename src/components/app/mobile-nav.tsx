@@ -4,23 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  BookOpen,
-  BookMarked,
-  Target,
-  Trophy,
-  Sparkles,
-  ShieldCheck,
-} from "lucide-react";
+import { LayoutDashboard, Dumbbell, Moon, Apple, Sparkles, ShieldCheck } from "lucide-react";
 
 const links = [
   { href: "/app", label: "Дашборд", icon: LayoutDashboard, exact: true },
-  { href: "/app/subjects", label: "Предметы", icon: BookOpen },
-  { href: "/app/review", label: "Темы", icon: BookMarked },
-  { href: "/app/mistakes", label: "Ошибки", icon: Target },
-  { href: "/app/leaderboard", label: "Рейтинг", icon: Trophy },
-  { href: "/app/ai", label: "ИИ", icon: Sparkles },
+  { href: "/app/training", label: "Тренировки", icon: Dumbbell },
+  { href: "/app/sleep", label: "Сон", icon: Moon },
+  { href: "/app/nutrition", label: "Питание", icon: Apple },
+  { href: "/app/coach", label: "Тренер", icon: Sparkles },
 ];
 
 const adminLink = { href: "/app/admin", label: "Админ", icon: ShieldCheck, exact: false };
@@ -42,11 +33,7 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
       {items.map((l) => {
         const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
         return (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="relative flex flex-1 flex-col items-center"
-          >
+          <Link key={l.href} href={l.href} className="relative flex flex-1 flex-col items-center">
             {active && (
               <motion.span
                 layoutId="mobilenav-active-bubble"
@@ -54,9 +41,6 @@ export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
                 transition={{ type: "spring", stiffness: 420, damping: 32 }}
               />
             )}
-            {/* whileTap (pointer-event driven) instead of CSS :active — fires
-                reliably even on a fast tap that immediately navigates away,
-                unlike :active which real mobile browsers often skip in that case. */}
             <motion.span
               whileTap={{ scale: 0.86 }}
               transition={{ type: "spring", stiffness: 500, damping: 25 }}

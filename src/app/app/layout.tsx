@@ -7,42 +7,29 @@ import { MobileNav } from "@/components/app/mobile-nav";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { Onboarding } from "@/components/app/onboarding";
 import { SignOutButton } from "@/components/app/sign-out-button";
-import { levelFromXp, xpProgress } from "@/lib/gamification";
-import { AnimatedBar } from "@/components/motion/animated-bar";
 import { isAdminSession } from "@/lib/admin";
-import { Sparkles, Flame, LifeBuoy } from "lucide-react";
+import { Activity as ActivityIcon, LifeBuoy } from "lucide-react";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const isAdmin = isAdminSession(session);
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, image: true, avatarKey: true, xp: true, streak: true, prepLevel: true },
-  });
+  const [user, profile, todayMetric] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, image: true, avatarKey: true } }),
+    prisma.athleteProfile.findUnique({ where: { userId: session.user.id } }),
+    prisma.dailyMetric.findUnique({ where: { userId_date: { userId: session.user.id, date: new Date(new Date().toISOString().slice(0, 10)) } }, select: { recoveryScore: true } }),
+  ]);
   if (!user) redirect("/login");
 
-  // <Onboarding> only ever reads `subjects` during the one-time setup flow
-  // (needsSetup === true) — every other navigation was paying for a full
-  // subjects table scan just to hand it data nothing on the page uses.
-  // The admin account never picks an exam/subjects, so it's exempt —
-  // otherwise every fresh admin login would be stuck behind a student
-  // setup wizard before ever reaching the admin dashboard.
-  const needsSetup = !isAdmin && !user.prepLevel;
-  const allSubjects = needsSetup
-    ? await prisma.subject.findMany({
-        orderBy: { order: "asc" },
-        select: { id: true, name: true, examType: true, color: true, icon: true },
-      })
-    : [];
+  const needsSetup = !isAdmin && !profile?.onboardingCompletedAt;
 
-  const level = levelFromXp(user.xp);
-  const progress = xpProgress(user.xp);
+  const score = todayMetric?.recoveryScore ?? null;
+  const scoreColor = score == null ? "var(--color-ink-soft)" : score >= 67 ? "var(--color-brand-green)" : score >= 34 ? "var(--color-brand-amber)" : "var(--color-brand-pink)";
 
   return (
     <div className="min-h-screen bg-(--color-paper)">
-      <Onboarding needsSetup={needsSetup} subjects={allSubjects} />
+      <Onboarding needsSetup={needsSetup} />
       <div className="app-ambient" aria-hidden>
         <div className="blob blob-blue" />
         <div className="blob blob-pink" />
@@ -54,31 +41,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           className="liquid-glass glass-sheen sticky top-6 hidden h-[calc(100vh-3rem)] w-64 shrink-0 flex-col rounded-[1.75rem] p-5 lg:flex"
           style={{ viewTransitionName: "app-shell-sidebar" } as React.CSSProperties}
         >
-          {/* Points at the dashboard, not "/" — the marketing site has its own
-              header/CTAs and stepping into it from inside the installed app
-              breaks the standalone feel entirely. */}
           <Link href="/app" className="flex items-center gap-2 px-1 font-display text-lg font-bold">
             <span className="flex h-8 w-8 items-center justify-center rounded-full btn-gradient">
-              <Sparkles className="h-4 w-4" strokeWidth={2.5} />
+              <ActivityIcon className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Балл
+            Pulse Coach
           </Link>
 
           <div className="mt-8 flex-1">
             <NavLinks isAdmin={isAdmin} />
           </div>
 
-          <div className="rounded-2xl bg-(--color-paper-dim) p-4">
-            <div className="flex items-center gap-2 text-sm font-bold">
-              <Flame className="h-4 w-4 text-(--color-brand-amber)" />
-              {user.streak} {streakWord(user.streak)} подряд
+          <Link href="/app" className="rounded-2xl bg-(--color-paper-dim) p-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-(--color-ink-soft)">
+              Готовность сегодня
             </div>
-            <div className="mt-3 flex items-center justify-between text-xs font-semibold text-(--color-ink-soft)">
-              <span>Уровень {level}</span>
-              <span>{progress.current}/{progress.needed} XP</span>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: scoreColor }} />
+              <span className="font-display text-2xl font-extrabold" style={{ color: scoreColor }}>
+                {score ?? "—"}
+              </span>
+              <span className="text-sm text-(--color-ink-soft)">/ 100</span>
             </div>
-            <AnimatedBar percent={progress.percent} className="btn-gradient" trackClassName="mt-1.5" />
-          </div>
+          </Link>
         </aside>
 
         <div className="min-w-0 flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
@@ -86,9 +71,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             className="mb-6 flex items-center justify-end gap-3"
             style={{ viewTransitionName: "app-shell-topbar" } as React.CSSProperties}
           >
-            <div className="liquid-glass flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold lg:hidden">
-              <Flame className="h-4 w-4 text-(--color-brand-amber)" />
-              {user.streak}
+            <div
+              className="liquid-glass flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold lg:hidden"
+              style={{ color: scoreColor }}
+            >
+              {score ?? "—"}
             </div>
             <Link
               href="/app/support"
@@ -99,13 +86,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               Поддержка
             </Link>
             <Link href="/app/profile" className="liquid-glass press-spring flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3">
-              <UserAvatar
-                avatarKey={user.avatarKey}
-                image={user.image}
-                name={user.name}
-                className="h-7 w-7 text-xs"
-                emojiClassName="text-base"
-              />
+              <UserAvatar avatarKey={user.avatarKey} image={user.image} name={user.name} className="h-7 w-7 text-xs" emojiClassName="text-base" />
               <span className="hidden text-sm font-semibold sm:inline">{user.name}</span>
             </Link>
             <SignOutButton />
@@ -118,13 +99,4 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <MobileNav isAdmin={isAdmin} />
     </div>
   );
-}
-
-function streakWord(n: number) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return "дней";
-  if (mod10 === 1) return "день";
-  if (mod10 >= 2 && mod10 <= 4) return "дня";
-  return "дней";
 }

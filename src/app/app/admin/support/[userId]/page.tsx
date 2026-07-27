@@ -17,11 +17,11 @@ export default async function AdminSupportThreadPage({
   if (!isAdminSession(session)) notFound();
   const { userId } = await params;
 
-  const student = await prisma.user.findUnique({
+  const athlete = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, name: true, email: true, avatarKey: true, image: true },
   });
-  if (!student) notFound();
+  if (!athlete) notFound();
 
   const [messages] = await Promise.all([
     prisma.supportMessage.findMany({
@@ -42,10 +42,10 @@ export default async function AdminSupportThreadPage({
       </Link>
 
       <div className="flex items-center gap-3">
-        <UserAvatar avatarKey={student.avatarKey} image={student.image} name={student.name} className="h-11 w-11" />
+        <UserAvatar avatarKey={athlete.avatarKey} image={athlete.image} name={athlete.name} className="h-11 w-11" />
         <div>
-          <h1 className="font-display text-xl font-extrabold">{student.name || "Гость"}</h1>
-          <p className="text-xs text-(--color-ink-soft)">{student.email || "без почты — демо-вход"}</p>
+          <h1 className="font-display text-xl font-extrabold">{athlete.name || "Гость"}</h1>
+          <p className="text-xs text-(--color-ink-soft)">{athlete.email || "без почты"}</p>
         </div>
       </div>
 
@@ -53,8 +53,8 @@ export default async function AdminSupportThreadPage({
         <SupportChat
           messages={messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))}
           action={sendAdminReply}
-          hiddenFields={{ userId: student.id }}
-          placeholder="Ответить студенту…"
+          hiddenFields={{ userId: athlete.id }}
+          placeholder="Ответить пользователю…"
           selfIsAdmin
         />
       </div>

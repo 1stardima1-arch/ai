@@ -3,7 +3,7 @@ import { Mail, Sparkles } from "lucide-react";
 import { AuthBackdrop } from "@/components/app/auth-backdrop";
 import { PageTransition } from "@/components/motion/page-transition";
 
-export const metadata = { title: "Проверь почту — Балл" };
+export const metadata = { title: "Проверь почту — Pulse Coach" };
 
 export default function CheckEmailPage() {
   return (
@@ -19,7 +19,7 @@ export default function CheckEmailPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full btn-gradient">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            Балл
+            Pulse Coach
           </Link>
 
           <div className="card-surface p-8 text-center">
@@ -28,7 +28,7 @@ export default function CheckEmailPage() {
             </span>
             <h1 className="font-display mt-5 text-2xl font-extrabold">Проверь почту</h1>
             <p className="mt-2 text-sm text-(--color-ink-soft)">
-              Мы отправили ссылку для входа. Открой письмо и нажми «Войти в Балл» — она
+              Мы отправили ссылку для входа. Открой письмо и нажми «Войти в Pulse Coach» — она
               действует 24 часа.
             </p>
             <Link

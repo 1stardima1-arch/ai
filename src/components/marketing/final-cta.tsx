@@ -14,14 +14,12 @@ export function FinalCta() {
             <div className="hill" />
             <div className="relative">
               <h2 className="font-display mx-auto max-w-2xl text-3xl font-extrabold tracking-tight sm:text-5xl">
-                Хватит листать учебники в одиночку
+                Хватит тренироваться вслепую
               </h2>
               <p className="mx-auto mt-5 max-w-lg text-(--color-ink-soft)">
-                Начни готовиться с ИИ-репетитором прямо сейчас — это бесплатно и займёт минуту.
+                Подключи устройство и получи первый план уже сегодня — бесплатно, без карты.
               </p>
-              <LinkButton href="/login" size="lg" className="mt-8">
-                Начать бесплатно <ArrowRight className="h-5 w-5" />
-              </LinkButton>
+              <LinkButton href="/login" size="lg" className="mt-8">Начать бесплатно <ArrowRight className="h-5 w-5" /></LinkButton>
             </div>
           </div>
         </Reveal>

@@ -16,14 +16,14 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  title: "Балл — готовься к ЕГЭ и ОГЭ без репетиторов",
+  title: "Pulse Coach — ИИ-тренер: готовность, тренировки, сон, питание",
   description:
-    "Балл — подготовка к ЕГЭ и ОГЭ без репетиторов: простая теория, реальные задания из открытого банка ФИПИ и ИИ, который понятно объясняет. Прогресс, разбор ошибок и аналитика в одном месте.",
+    "Pulse Coach — ИИ-тренер для эндуранс- и силовых атлетов: пороги лактата, ЧСС и VO2max определяются автоматически из данных Garmin/Polar/Athyx, план тренировок адаптируется под готовность каждый день, с объяснением каждого решения.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Балл",
+    title: "Pulse Coach",
   },
   icons: {
     icon: [
@@ -74,7 +74,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(localStorage.getItem('ball-theme')!=='light')document.documentElement.classList.add('dark')}catch(e){}",
+              "try{if(localStorage.getItem('pulse-theme')!=='light')document.documentElement.classList.add('dark')}catch(e){}",
           }}
         />
         <SwRegister />

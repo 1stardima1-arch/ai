@@ -32,7 +32,7 @@ export default async function AdminSupportListPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Сообщения поддержки</h1>
-      <p className="mt-1 text-(--color-ink-soft)">Все обращения студентов, свежие сверху.</p>
+      <p className="mt-1 text-(--color-ink-soft)">Все обращения пользователей, свежие сверху.</p>
 
       {list.length === 0 ? (
         <div className="card-surface mt-6 p-8 text-center text-sm text-(--color-ink-soft)">

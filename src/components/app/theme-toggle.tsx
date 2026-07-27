@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 
-const STORAGE_KEY = "ball-theme";
+const STORAGE_KEY = "pulse-theme";
 
 // useSyncExternalStore (not useState+useEffect) reads the .dark class
 // correctly through hydration without a "flash of the wrong icon" and

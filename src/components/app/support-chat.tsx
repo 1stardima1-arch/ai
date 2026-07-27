@@ -83,7 +83,7 @@ export function SupportChat({
               >
                 {!selfIsAdmin && m.fromAdmin && (
                   <span className="flex items-center gap-1 px-1 text-[0.7rem] font-bold text-(--color-brand-violet)">
-                    <ShieldCheck className="h-3 w-3" /> Поддержка «Балл»
+                    <ShieldCheck className="h-3 w-3" /> Поддержка «Pulse Coach»
                   </span>
                 )}
                 <div

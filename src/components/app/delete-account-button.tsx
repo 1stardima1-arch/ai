@@ -34,8 +34,9 @@ export function DeleteAccountButton({ confirmTarget }: { confirmTarget: string }
   return (
     <div className="space-y-3">
       <p className="text-xs leading-relaxed text-(--color-ink-soft)">
-        Это навсегда удалит аккаунт и весь прогресс: решённые задания, достижения,
-        результаты пробных экзаменов, привязанные устройства. Отменить нельзя.
+        Это навсегда удалит аккаунт и все данные: тренировки, показатели сна и
+        восстановления, пороги, историю чата с ИИ-тренером, подключённые
+        устройства. Отменить нельзя.
       </p>
       <p className="text-xs font-semibold">
         Чтобы подтвердить, введи <span className="text-(--color-brand-pink)">{confirmTarget}</span>:

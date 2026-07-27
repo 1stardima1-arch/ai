@@ -71,7 +71,7 @@ export function AppSplash() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.25 }}
           >
-            <StaggerTitle text="Балл" className="font-display text-4xl font-extrabold" />
+            <StaggerTitle text="Pulse Coach" className="font-display text-4xl font-extrabold" />
           </motion.div>
 
           <motion.p
@@ -80,7 +80,7 @@ export function AppSplash() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45, duration: 0.4 }}
           >
-            ИИ-репетитор для ЕГЭ и ОГЭ — понятная теория и разбор ошибок
+            ИИ-тренер: готовность, тренировки, сон и питание
           </motion.p>
         </motion.div>
       )}

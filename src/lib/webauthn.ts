@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 
-export const rpName = "Балл";
+export const rpName = "Pulse Coach";
 
 // Derived from the actual incoming request, not NEXTAUTH_URL — that env
 // var isn't strictly required for Auth.js to work on Vercel (it can

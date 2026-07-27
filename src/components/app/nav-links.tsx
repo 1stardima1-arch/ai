@@ -6,24 +6,24 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  BookOpen,
-  BookMarked,
-  Target,
-  LineChart,
+  Dumbbell,
+  Moon,
+  Apple,
+  Watch,
+  Users,
   Sparkles,
-  Trophy,
   User,
   ShieldCheck,
 } from "lucide-react";
 
 const links = [
   { href: "/app", label: "Дашборд", icon: LayoutDashboard, exact: true },
-  { href: "/app/subjects", label: "Предметы", icon: BookOpen },
-  { href: "/app/review", label: "Повторение", icon: BookMarked },
-  { href: "/app/mistakes", label: "Разбор ошибок", icon: Target },
-  { href: "/app/analytics", label: "Аналитика", icon: LineChart },
-  { href: "/app/leaderboard", label: "Рейтинг", icon: Trophy },
-  { href: "/app/ai", label: "ИИ-репетитор", icon: Sparkles },
+  { href: "/app/training", label: "Тренировки", icon: Dumbbell },
+  { href: "/app/sleep", label: "Сон", icon: Moon },
+  { href: "/app/nutrition", label: "Питание", icon: Apple },
+  { href: "/app/devices", label: "Устройства", icon: Watch },
+  { href: "/app/feed", label: "Лента", icon: Users },
+  { href: "/app/coach", label: "ИИ-тренер", icon: Sparkles },
   { href: "/app/profile", label: "Профиль", icon: User },
 ];
 

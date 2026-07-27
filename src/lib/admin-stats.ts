@@ -1,82 +1,69 @@
 import { prisma } from "@/lib/prisma";
 
-// Aggregate, app-wide statistics for the admin dashboard — unlike everything
-// in stats.ts (all scoped to a single userId), these queries look across the
-// whole users table. The "funnel" here models the stages a student actually
-// passes through: signs up -> finishes onboarding (picks prepLevel) -> solves
-// a first task -> stays active in the following week/month. Comparing the
-// counts stage-to-stage is what answers "at what point do people leave".
-export async function getAdminOverview() {
+export type FunnelStage = { key: string; label: string; count: number; percentOfTotal: number; droppedFromPrev: number };
+export type SignupPoint = { date: string; label: string; count: number };
+
+export type AdminOverview = {
+  totalUsers: number;
+  onboardedUsers: number;
+  active7d: number;
+  active30d: number;
+  unreadMessages: number;
+  unreadThreads: number;
+  funnel: FunnelStage[];
+  signupTrend: SignupPoint[];
+};
+
+export async function getAdminOverview(): Promise<AdminOverview> {
   const now = new Date();
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const fourteenDaysAgo = new Date(now);
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  const d7 = new Date(now.getTime() - 7 * 86400000);
+  const d30 = new Date(now.getTime() - 30 * 86400000);
+  const d14 = new Date(now.getTime() - 14 * 86400000);
 
   const [
-    totalUsers,
-    onboardedUsers,
-    practicedUsers,
-    active7d,
-    active30d,
-    unreadMessages,
-    unreadThreadRows,
-    recentSignups,
+    totalUsers, onboardedUsers, connectedDevices, loggedActivity,
+    active7dUsers, active30dUsers,
+    unreadMessages, unreadThreadsRaw, recentUsers,
   ] = await Promise.all([
     prisma.user.count(),
-    prisma.user.count({ where: { prepLevel: { not: null } } }),
-    prisma.user.count({ where: { attempts: { some: {} } } }),
-    prisma.user.count({ where: { lastPracticeDate: { gte: sevenDaysAgo } } }),
-    prisma.user.count({ where: { lastPracticeDate: { gte: thirtyDaysAgo } } }),
+    prisma.athleteProfile.count({ where: { onboardingCompletedAt: { not: null } } }),
+    prisma.deviceConnection.groupBy({ by: ["userId"], where: { status: "CONNECTED" } }),
+    prisma.activity.groupBy({ by: ["userId"] }),
+    prisma.activity.groupBy({ by: ["userId"], where: { startedAt: { gte: d7 } } }),
+    prisma.activity.groupBy({ by: ["userId"], where: { startedAt: { gte: d30 } } }),
     prisma.supportMessage.count({ where: { fromAdmin: false, read: false } }),
-    prisma.supportMessage.findMany({
-      where: { fromAdmin: false, read: false },
-      select: { userId: true },
-      distinct: ["userId"],
-    }),
-    prisma.user.findMany({
-      where: { createdAt: { gte: fourteenDaysAgo } },
-      select: { createdAt: true },
-    }),
+    prisma.supportMessage.findMany({ where: { fromAdmin: false, read: false }, select: { userId: true }, distinct: ["userId"] }),
+    prisma.user.findMany({ where: { createdAt: { gte: d14 } }, select: { createdAt: true } }),
   ]);
 
-  const funnel = [
-    { key: "signed_up", label: "Зарегистрировались", count: totalUsers },
-    { key: "onboarded", label: "Прошли настройку", count: onboardedUsers },
-    { key: "practiced", label: "Решили первое задание", count: practicedUsers },
-    { key: "active7d", label: "Активны за 7 дней", count: active7d },
-    { key: "active30d", label: "Активны за 30 дней", count: active30d },
-  ].map((stage, i, arr) => ({
-    ...stage,
-    percentOfTotal: totalUsers > 0 ? Math.round((stage.count / totalUsers) * 100) : 0,
-    droppedFromPrev: i === 0 ? 0 : arr[i - 1].count - stage.count,
+  const total = Math.max(totalUsers, 1);
+  const stages = [
+    { key: "registered", label: "Зарегистрировались", count: totalUsers },
+    { key: "onboarded", label: "Прошли настройку профиля", count: onboardedUsers },
+    { key: "device", label: "Подключили устройство", count: connectedDevices.length },
+    { key: "activity", label: "Записали первую тренировку", count: loggedActivity.length },
+    { key: "active7d", label: "Активны за 7 дней", count: active7dUsers.length },
+  ];
+  const funnel: FunnelStage[] = stages.map((s, i) => ({
+    ...s,
+    percentOfTotal: Math.round((s.count / total) * 100),
+    droppedFromPrev: i === 0 ? 0 : Math.max(0, stages[i - 1].count - s.count),
   }));
 
-  const days: { date: string; label: string; count: number }[] = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    days.push({ date: key, label: d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" }), count: 0 });
-  }
-  const dayIndex = new Map(days.map((d, i) => [d.date, i]));
-  for (const u of recentSignups) {
+  const byDay = new Map<string, number>();
+  for (const u of recentUsers) {
     const key = u.createdAt.toISOString().slice(0, 10);
-    const idx = dayIndex.get(key);
-    if (idx !== undefined) days[idx].count++;
+    byDay.set(key, (byDay.get(key) ?? 0) + 1);
+  }
+  const signupTrend: SignupPoint[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86400000);
+    const key = d.toISOString().slice(0, 10);
+    signupTrend.push({ date: key, label: d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" }), count: byDay.get(key) ?? 0 });
   }
 
   return {
-    totalUsers,
-    onboardedUsers,
-    practicedUsers,
-    active7d,
-    active30d,
-    unreadMessages,
-    unreadThreads: unreadThreadRows.length,
-    funnel,
-    signupTrend: days,
+    totalUsers, onboardedUsers, active7d: active7dUsers.length, active30d: active30dUsers.length,
+    unreadMessages, unreadThreads: unreadThreadsRaw.length, funnel, signupTrend,
   };
 }
