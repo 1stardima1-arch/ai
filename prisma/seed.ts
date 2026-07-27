@@ -93,8 +93,23 @@ async function main() {
         });
         createdTasks.push(created);
       }
-      // Tasks removed from the seed data (index beyond what's left) become
-      // orphaned rather than deleted, for the same Attempt-safety reason.
+      // A task dropped from the seed data (e.g. moved to a different topic
+      // during a content fix) leaves behind a "t4"-style row nobody upserts
+      // anymore. Deleting it outright is only safe once nobody has actually
+      // attempted it — otherwise it stays as a harmless orphan rather than
+      // taking a student's Attempt history down with it.
+      const keepIds = new Set(createdTasks.map((t) => t.id));
+      const leftoverTasks = await prisma.task.findMany({
+        where: { topicId: dbTopic.id, id: { notIn: [...keepIds] } },
+        select: { id: true, statement: true, _count: { select: { attempts: true } } },
+      });
+      for (const leftover of leftoverTasks) {
+        if (leftover._count.attempts > 0) {
+          console.log(`    ! keeping orphaned task with attempts (${dbTopic.slug}): ${leftover.statement.slice(0, 60)}…`);
+          continue;
+        }
+        await prisma.task.delete({ where: { id: leftover.id } });
+      }
 
       const firstAutoGraded = createdTasks.find(
         (t) => t.type !== "ESSAY" && t.type !== "DETAILED_ANSWER"
@@ -109,6 +124,26 @@ async function main() {
         mockExamTaskIds.push(firstManualGraded.id);
         freeformCount++;
       }
+    }
+
+    // Same idea one level up: a topic retired from the seed data (folded
+    // into another topic, split apart, renamed to a fresh slug) would
+    // otherwise linger in the DB and keep showing up on the subject's topic
+    // list forever, since nothing here ever queries "topics still in the
+    // seed array" — only "topics that exist for this subject". Safe to
+    // drop only when every one of its tasks is attempt-free.
+    const keepTopicSlugs = new Set(subject.topics.map((t) => t.slug));
+    const dbTopics = await prisma.topic.findMany({
+      where: { subjectId: dbSubject.id },
+      select: { id: true, slug: true, name: true, _count: { select: { tasks: { where: { attempts: { some: {} } } } } } },
+    });
+    for (const dbTopic of dbTopics) {
+      if (keepTopicSlugs.has(dbTopic.slug)) continue;
+      if (dbTopic._count.tasks > 0) {
+        console.log(`    ! keeping retired topic with attempts (${subject.slug}): ${dbTopic.name}`);
+        continue;
+      }
+      await prisma.topic.delete({ where: { id: dbTopic.id } });
     }
 
     // Build a compact mock exam from one task per topic (plus its
